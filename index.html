@@ -14,7 +14,7 @@
 </script>
 <script type="text/javascript">
 
-var editboxHTML = 
+var html = 
 '<html class="expand close">' +
 '<head>' +
 '<style type="text/css">' +
@@ -31,13 +31,22 @@ var editboxHTML =
 '<\/body>' +
 '<\/html>';
 
-var defaultStuff = '<h3>Welcome to the real-time HTML editor!<\/h3>\n';
+var defaultStuff = ` Edit code left, see the result right  \n\n\n
+<br><br><br><br><br><br>
+ \n\n\n
+<div style="display:flex;align-items:start;justify-content:center;width:100vw;height:100vh">
+  \n
+   <iframe src="https://tools.fiverr.com/?searchbox-iframe=1&amp;affid=692098&amp;widget-commission=fiverrhybrid&amp;widget-search-placeholder=Minimal+logo+design&amp;widget-width=280&amp;widget-style=1" border="0" scrolling="no" height="53px" width="100%" style="border: 0px; overflow: hidden; width: 928px; max-width: 280px; height: 253px; box-shadow: rgba(17, 17, 17, 0.12) 0px 16px 32px;" class="fasb-iframe-searchbox-widget"  data-origwidth="100%" data-origheight="253px" max-width="280" widget-width="280" widget-style="1"></iframe>
+\n
+   </div>
+
+`;
 
 var old = '';
          
 function init()
 {
-  window.editbox.document.write(editboxHTML);
+  window.editbox.document.write(html);
   window.editbox.document.close();
   window.editbox.document.f.ta.value = defaultStuff;
   update();
@@ -61,11 +70,9 @@ function update()
 
 </script>
 </head>
-
-<frameset resizable="yes" cols="50%,*" onload="init();">
-  <!-- about:blank confuses opera, so use javascript: URLs instead -->
-  <frame name="editbox" src="javascript:'';">
-  <frame name="dynamicframe" src="javascript:'';">
-</frameset>
-
+  <frameset resizable="yes" cols="50%,*" onload="init();">
+    <!-- about:blank confuses opera, so use javascript: URLs instead -->
+    <frame name="editbox" src="javascript:'';">
+    <frame name="dynamicframe" src="javascript:'';">
+  </frameset>
 </html>
