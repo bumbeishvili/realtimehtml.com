@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html>
 <head>
@@ -6,7 +5,7 @@
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Free online real-time HTML Editor with live preview">
+<meta name="description" content="Free online real-time HTML editor with live preview">
 <meta name="author" content="Fiverr">
 <meta name="keywords" content="Free, HTML, CSS, JavaScript, Real-time, live, online, Editor">
 <meta name="robots" content="index, follow">
@@ -18,6 +17,51 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-7E9MWZLQHL"></script>
 <link rel="icon" href="./vector.png">
 
+<!-- Add CodeMirror CSS and JavaScript -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/monokai.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+
+<!-- Add Split.js -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
+
+<style>
+.CodeMirror {
+    height: 100vh;
+    font-size: 14px;
+}
+
+/* Split.js styles */
+.split {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+}
+
+.gutter {
+    background-color: #333;
+    background-repeat: no-repeat;
+    background-position: 50%;
+}
+
+.gutter.gutter-horizontal {
+    cursor: col-resize;
+    width: 10px;
+}
+
+.split-panel {
+    overflow: hidden;
+}
+
+#editor {
+    min-width: 0;  /* Required for proper flex behavior */
+}
+</style>
+
 <script>
   window.dataLayer = window.dataLayer || [];
   function gtag(){dataLayer.push(arguments);}
@@ -26,66 +70,67 @@
   gtag('config', 'G-7E9MWZLQHL');
 </script>
 <script type="text/javascript">
-
-var html = 
-'<html class="expand close">' +
-'<head>' +
-'<style type="text/css">' +
-'.expand { width: 100%; height: 100%; }' +
-'.close { border: none; margin: 0px; padding: 0px; }' +
-'html,body { overflow: hidden; }' +
-'<\/style>' +
-'<\/head>' +
-'<body class="expand close" onload="document.f.ta.focus(); document.f.ta.select();">' +
-'<form class="expand close" name="f">' +
-'<textarea class="expand close" style="background: #def;" name="ta" wrap="hard" spellcheck="false">' +
-'<\/textarea>' +
-'<\/form>' +
-'<\/body>' +
-'<\/html>';
-
-var defaultStuff = ` Edit code left, see the result right  \n\n\n
-<br><br><br><br><br><br>
- \n\n\n
-<div style="display:flex;align-items:start;justify-content:center;width:100vw;height:100vh">
-  \n
-   <iframe src="https://tools.fiverr.com/?searchbox-iframe=1&amp;affid=692098&amp;widget-commission=fiverrhybrid&amp;widget-search-placeholder=Minimal+logo+design&amp;widget-width=280&amp;widget-style=1" border="0" scrolling="no" height="53px" width="100%" style="border: 0px; overflow: hidden; width: 928px; max-width: 280px; height: 253px; box-shadow: rgba(17, 17, 17, 0.12) 0px 16px 32px;" class="fasb-iframe-searchbox-widget"  data-origwidth="100%" data-origheight="253px" max-width="280" widget-width="280" widget-style="1"></iframe>
-\n
-   </div>
-
+var defaultStuff = ` <b> Edit code left, see the result right  </b>
 `;
 
+var editor;
 var old = '';
-         
-function init()
-{
-  window.editbox.document.write(html);
-  window.editbox.document.close();
-  window.editbox.document.f.ta.value = defaultStuff;
-  update();
+
+function init() {
+    // Initialize CodeMirror
+    editor = CodeMirror(document.querySelector('#editor'), {
+        value: defaultStuff,
+        mode: 'htmlmixed',
+        theme: 'monokai',
+        lineNumbers: true,
+        autoCloseTags: true,
+        autoCloseBrackets: true,
+        matchBrackets: true,
+        indentUnit: 2,
+        tabSize: 2,
+        lineWrapping: true,
+    });
+
+    editor.on('change', update);
+    
+    // Focus and select all text
+    editor.focus();
+    editor.execCommand('selectAll');
+    
+    update();
 }
 
-function update()
-{
-  var textarea = window.editbox.document.f.ta;
-  var d = dynamicframe.document; 
-
-  if (old != textarea.value) {
-    old = textarea.value;
-    d.open();
-    d.write(old);
-    if (old.replace(/[\r\n]/g,'') == defaultStuff.replace(/[\r\n]/g,''))
-    d.close();
-  }
-
-  window.setTimeout(update, 150);
+function update() {
+    var newValue = editor.getValue();
+    if (old != newValue) {
+        old = newValue;
+        var d = document.querySelector('#preview').contentDocument;
+        d.open();
+        d.write(newValue);
+        d.close();
+    }
+    window.setTimeout(update, 150);
 }
-
 </script>
 </head>
-  <frameset resizable="yes" cols="50%,*" onload="init();">
-    <!-- about:blank confuses opera, so use javascript: URLs instead -->
-    <frame name="editbox" src="javascript:'';">
-    <frame name="dynamicframe" src="javascript:'';">
-  </frameset>
+<body style="margin: 0; padding: 0; overflow: hidden;">
+    <div class="split">
+        <div class="split-panel" id="left-panel">
+            <div id="editor"></div>
+        </div>
+        <div class="split-panel" id="right-panel">
+            <iframe id="preview" style="width: 100%; height: 100%; border: none;"></iframe>
+        </div>
+    </div>
+    <script>
+        window.onload = function() {
+            Split(['#left-panel', '#right-panel'], {
+                sizes: [50, 50],
+                minSize: [200, 200],
+                gutterSize: 10,
+            });
+            init();
+        };
+    </script>
+</body>
 </html>
