@@ -33,6 +33,9 @@
 <!-- Add Split.js -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
 
+<!-- Add LZString for compression -->
+<script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
+
 <style>
 .CodeMirror {
     height: 100vh;
@@ -64,6 +67,25 @@
 #editor {
     min-width: 0;  /* Required for proper flex behavior */
 }
+
+/* Share button styles */
+#shareButton {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    padding: 8px 16px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+#shareButton:hover {
+    background-color: #45a049;
+}
 </style>
 
 <script>
@@ -73,12 +95,29 @@
 
   gtag('config', 'G-7E9MWZLQHL');
 </script>
+
+<!-- Add GitHub Gist API -->
+<script src="https://cdn.jsdelivr.net/npm/@octokit/core"></script>
+
 <script type="text/javascript">
 var defaultStuff = ` <b> Edit code left, see the result right  </b>
 `;
 
 var editor;
 var old = '';
+
+function shareCode() {
+    const content = editor.getValue();
+    try {
+        const compressed = LZString.compressToEncodedURIComponent(content);
+        const shareUrl = `${window.location.origin}#code=${compressed}`;
+        navigator.clipboard.writeText(shareUrl);
+        alert('Share link copied to clipboard!');
+    } catch (error) {
+        console.error('Error sharing code:', error);
+        alert('Failed to create share link. The code might be too large.');
+    }
+}
 
 function init() {
     // Initialize CodeMirror
@@ -97,9 +136,24 @@ function init() {
 
     editor.on('change', update);
     
-    // Focus and select all text
-    editor.focus();
-    editor.execCommand('selectAll');
+    // Check for shared code
+    const hash = window.location.hash;
+    if (hash && hash.startsWith('#code=')) {
+        try {
+            const encoded = hash.substring(6); // Remove '#code='
+            const content = LZString.decompressFromEncodedURIComponent(encoded);
+            if (content) {
+                editor.setValue(content);
+                update(); // Force immediate update
+            }
+        } catch (error) {
+            console.error('Error loading shared code:', error);
+        }
+    } else {
+        // Only focus and select if no shared code
+        editor.focus();
+        editor.execCommand('selectAll');
+    }
     
     update();
 }
@@ -118,6 +172,7 @@ function update() {
 </script>
 </head>
 <body style="margin: 0; padding: 0; overflow: hidden;">
+    <button id="shareButton" onclick="shareCode()">Share</button>
     <div class="split">
         <div class="split-panel" id="left-panel">
             <div id="editor"></div>
