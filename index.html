@@ -1,25 +1,68 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<title>Real-time HTML Editor</title>
+<title>Real-time HTML Editor - Live HTML, CSS, JavaScript Code Editor</title>
 
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<meta name="description" content="Free online real-time HTML editor with live preview">
-<meta name="author" content="Fiverr">
-<meta name="keywords" content="Free, HTML, CSS, JavaScript, Real-time, live, online, Editor">
+<meta name="description" content="Free online real-time HTML editor with instant live preview. Write and test HTML, CSS, and JavaScript code in real-time. Perfect for web developers, students, and quick prototyping.">
+<meta name="author" content="realtimehtml.com">
+<meta name="keywords" content="HTML editor, live preview, real-time editor, code editor, web development, HTML, CSS, JavaScript, online editor, free editor, coding tool">
 <meta name="robots" content="index, follow">
 <meta name="googlebot" content="index, follow">
 <meta name="google" content="nositelinkssearchbox">
 <meta name="google" content="notranslate">
 
+<!-- Canonical URL -->
+<link rel="canonical" href="https://realtimehtml.com">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://realtimehtml.com">
+<meta property="og:title" content="Real-time HTML Editor - Live Code Preview">
+<meta property="og:description" content="Free online real-time HTML editor with instant live preview. Write and test HTML, CSS, and JavaScript code in real-time.">
+<meta property="og:image" content="https://realtimehtml.com/preview.png">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://realtimehtml.com">
+<meta property="twitter:title" content="Real-time HTML Editor - Live Code Preview">
+<meta property="twitter:description" content="Free online real-time HTML editor with instant live preview. Write and test HTML, CSS, and JavaScript code in real-time.">
+<meta property="twitter:image" content="https://realtimehtml.com/preview.png">
+
+<!-- Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Real-time HTML Editor",
+  "url": "https://realtimehtml.com",
+  "description": "Free online real-time HTML editor with instant live preview. Write and test HTML, CSS, and JavaScript code in real-time.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "Real-time preview",
+    "HTML, CSS, JavaScript support",
+    "Code sharing",
+    "Split view",
+    "Mobile responsive"
+  ]
+}
+</script>
+
+<!-- Favicon -->
+<link rel="icon" href="./vector.png">
+<link rel="apple-touch-icon" href="./vector.png">
+
 <!-- Global site tag (gtag.js) - Google Analytics -->
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-7E9MWZLQHL"></script>
 
 <script defer data-domain="realtimehtml.com" src="https://plausible.io/js/script.js"></script>
-
-
-<link rel="icon" href="./vector.png">
 
 <!-- Add CodeMirror CSS and JavaScript -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
@@ -236,6 +279,24 @@ var defaultStuff = ` <b> Edit code left, see the result right  </b>
 
 var editor;
 var old = '';
+const STORAGE_KEY = 'realtimehtml_code';
+
+function saveToLocalStorage(content) {
+    try {
+        localStorage.setItem(STORAGE_KEY, content);
+    } catch (error) {
+        console.error('Error saving to localStorage:', error);
+    }
+}
+
+function loadFromLocalStorage() {
+    try {
+        return localStorage.getItem(STORAGE_KEY) || defaultStuff;
+    } catch (error) {
+        console.error('Error loading from localStorage:', error);
+        return defaultStuff;
+    }
+}
 
 async function loadGistContent(url) {
     try {
@@ -273,9 +334,43 @@ function shareCode() {
 }
 
 async function init() {
-    // Initialize CodeMirror
+    // Initialize CodeMirror with saved or shared code
+    let initialContent = defaultStuff;
+    const hash = window.location.hash;
+
+    if (hash) {
+        // If there's a hash, try to load shared code
+        if (hash.startsWith('#code=')) {
+            try {
+                const encoded = hash.substring(6);
+                const content = LZString.decompressFromEncodedURIComponent(encoded);
+                if (content) {
+                    initialContent = content;
+                }
+            } catch (error) {
+                console.error('Error loading shared code:', error);
+            }
+        } else if (hash.startsWith('#@')) {
+            const gistUrl = hash.substring(2);
+            const content = await loadGistContent(gistUrl);
+            if (content) {
+                initialContent = content;
+            }
+        } else if (hash.startsWith('#http')) {
+            const gistUrl = hash.substring(1);
+            const content = await loadGistContent(gistUrl);
+            if (content) {
+                initialContent = content;
+            }
+        }
+    } else {
+        // No shared code, load from localStorage
+        initialContent = loadFromLocalStorage();
+    }
+
+    // Initialize editor with the content
     editor = CodeMirror(document.querySelector('#editor'), {
-        value: defaultStuff,
+        value: initialContent,
         mode: 'htmlmixed',
         theme: 'monokai',
         lineNumbers: true,
@@ -287,41 +382,15 @@ async function init() {
         lineWrapping: true,
     });
 
-    editor.on('change', update);
+    // Set up auto-save
+    editor.on('change', (cm) => {
+        const content = cm.getValue();
+        saveToLocalStorage(content);
+        update();
+    });
     
-    // Check for shared code
-    const hash = window.location.hash;
-    if (hash) {
-        if (hash.startsWith('#code=')) {
-            try {
-                const encoded = hash.substring(6); // Remove '#code='
-                const content = LZString.decompressFromEncodedURIComponent(encoded);
-                if (content) {
-                    editor.setValue(content);
-                    update(); // Force immediate update
-                }
-            } catch (error) {
-                console.error('Error loading shared code:', error);
-            }
-        } else if (hash.startsWith('#@')) {
-            // Handle #@ format
-            const gistUrl = hash.substring(2); // Remove '#@'
-            const content = await loadGistContent(gistUrl);
-            if (content) {
-                editor.setValue(content);
-                update();
-            }
-        } else if (hash.startsWith('#http')) {
-            // Handle direct URL format
-            const gistUrl = hash.substring(1); // Remove '#'
-            const content = await loadGistContent(gistUrl);
-            if (content) {
-                editor.setValue(content);
-                update();
-            }
-        }
-    } else {
-        // Only focus and select if no shared code
+    // Focus and select only if it's the default content
+    if (initialContent === defaultStuff) {
         editor.focus();
         editor.execCommand('selectAll');
     }
