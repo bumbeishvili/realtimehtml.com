@@ -36,6 +36,11 @@
 <!-- Add LZString for compression -->
 <script src="https://cdn.jsdelivr.net/npm/lz-string@1.4.4/libs/lz-string.min.js"></script>
 
+<!-- Add Material Icons -->
+<link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<!-- Add Montserrat font -->
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600&display=swap" rel="stylesheet">
+
 <style>
 .CodeMirror {
     height: 100vh;
@@ -71,20 +76,146 @@
 /* Share button styles */
 #shareButton {
     position: fixed;
-    top: 10px;
-    right: 10px;
-    z-index: 1000;
-    padding: 8px 16px;
-    background-color: #4CAF50;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    width: 40px;
+    height: 40px;
+    background-color: #2d2d2d;
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: 50%;
     cursor: pointer;
-    font-size: 14px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+
+#shareButton .material-icons {
+    font-size: 20px;
 }
 
 #shareButton:hover {
-    background-color: #45a049;
+    background-color: #3d3d3d;
+    box-shadow: 0 3px 7px rgba(0,0,0,0.3);
+    transform: translateX(-50%) scale(1.05);
+}
+
+#shareButton:active {
+    transform: translateX(-50%) scale(0.95);
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10001;
+    opacity: 0;
+    transition: opacity 0.2s ease;
+    font-family: 'Montserrat', sans-serif;
+}
+
+.modal.show {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-content {
+    position: relative;
+    background: #2d2d2d;
+    margin: auto;
+    padding: 25px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.modal-content h2 {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 600;
+    font-size: 20px;
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s ease;
+}
+
+.modal-close:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+.share-option {
+    background: #363636;
+    padding: 20px;
+    margin: 15px 0;
+    border-radius: 6px;
+    transition: all 0.2s ease;
+}
+
+.share-option:hover {
+    background: #404040;
+}
+
+.share-option h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #fff;
+    font-weight: 500;
+}
+
+.share-option p {
+    margin: 0 0 15px 0;
+    color: #bbb;
+    font-size: 14px;
+    line-height: 1.5;
+    font-weight: 400;
+}
+
+.share-button {
+    font-family: 'Montserrat', sans-serif;
+    font-weight: 500;
+    background: #4a4a4a;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s ease;
+}
+
+.share-button:hover {
+    background: #555;
+}
+
+.share-button .material-icons {
+    font-size: 16px;
 }
 </style>
 
@@ -106,20 +237,42 @@ var defaultStuff = ` <b> Edit code left, see the result right  </b>
 var editor;
 var old = '';
 
+async function loadGistContent(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch Gist');
+        return await response.text();
+    } catch (error) {
+        console.error('Error loading gist:', error);
+        return null;
+    }
+}
+
+function showModal() {
+    document.getElementById('shareModal').classList.add('show');
+}
+
+function hideModal() {
+    document.getElementById('shareModal').classList.remove('show');
+}
+
 function shareCode() {
     const content = editor.getValue();
     try {
         const compressed = LZString.compressToEncodedURIComponent(content);
         const shareUrl = `${window.location.origin}#code=${compressed}`;
         navigator.clipboard.writeText(shareUrl);
-        alert('Share link copied to clipboard!');
+        document.getElementById('compressedButton').textContent = 'Copied!';
+        setTimeout(() => {
+            document.getElementById('compressedButton').innerHTML = '<span class="material-icons">content_copy</span>Copy compressed URL';
+        }, 2000);
     } catch (error) {
         console.error('Error sharing code:', error);
         alert('Failed to create share link. The code might be too large.');
     }
 }
 
-function init() {
+async function init() {
     // Initialize CodeMirror
     editor = CodeMirror(document.querySelector('#editor'), {
         value: defaultStuff,
@@ -138,16 +291,34 @@ function init() {
     
     // Check for shared code
     const hash = window.location.hash;
-    if (hash && hash.startsWith('#code=')) {
-        try {
-            const encoded = hash.substring(6); // Remove '#code='
-            const content = LZString.decompressFromEncodedURIComponent(encoded);
+    if (hash) {
+        if (hash.startsWith('#code=')) {
+            try {
+                const encoded = hash.substring(6); // Remove '#code='
+                const content = LZString.decompressFromEncodedURIComponent(encoded);
+                if (content) {
+                    editor.setValue(content);
+                    update(); // Force immediate update
+                }
+            } catch (error) {
+                console.error('Error loading shared code:', error);
+            }
+        } else if (hash.startsWith('#@')) {
+            // Handle #@ format
+            const gistUrl = hash.substring(2); // Remove '#@'
+            const content = await loadGistContent(gistUrl);
             if (content) {
                 editor.setValue(content);
-                update(); // Force immediate update
+                update();
             }
-        } catch (error) {
-            console.error('Error loading shared code:', error);
+        } else if (hash.startsWith('#http')) {
+            // Handle direct URL format
+            const gistUrl = hash.substring(1); // Remove '#'
+            const content = await loadGistContent(gistUrl);
+            if (content) {
+                editor.setValue(content);
+                update();
+            }
         }
     } else {
         // Only focus and select if no shared code
@@ -172,7 +343,37 @@ function update() {
 </script>
 </head>
 <body style="margin: 0; padding: 0; overflow: hidden;">
-    <button id="shareButton" onclick="shareCode()">Share</button>
+    <button id="shareButton" onclick="showModal()" title="Share code">
+        <span class="material-icons">share</span>
+    </button>
+
+    <!-- Share Modal -->
+    <div id="shareModal" class="modal" onclick="if(event.target === this) hideModal()">
+        <div class="modal-content">
+            <button class="modal-close" onclick="hideModal()">
+                <span class="material-icons">close</span>
+            </button>
+            <h2 style="margin-top: 0;">Share Your Code</h2>
+            
+            <div class="share-option">
+                <h3>Option 1: Share via GitHub Gist (Recommended)</h3>
+                <p>1. Create a new Gist at <a href="https://gist.github.com" target="_blank" style="color: #7cb7ff;">gist.github.com</a><br>
+                   2. Copy your code and paste it there<br>
+                   3. After saving, click "Raw" button<br>
+                   4. Add your raw Gist URL to: <code style="background: #404040; padding: 2px 6px; border-radius: 4px;">realtimehtml.com#</code></p>
+            </div>
+
+            <div class="share-option">
+                <h3>Option 2: Quick Share (URL Compressed)</h3>
+                <p>Get an instantly shareable link with your code compressed into the URL.<br>
+                   Note: This might not work for very large code files.</p>
+                <button id="compressedButton" class="share-button" onclick="shareCode()">
+                    <span class="material-icons">content_copy</span>Copy compressed URL
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="split">
         <div class="split-panel" id="left-panel">
             <div id="editor"></div>
