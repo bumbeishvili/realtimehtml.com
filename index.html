@@ -297,9 +297,28 @@ let previousContent = '';
 const storage = {
     save(content) {
         try {
-            localStorage.setItem(STORAGE_KEY, content);
+            // If content is empty, save the default content instead
+            const contentToSave = content || defaultStuff;
+            localStorage.setItem(STORAGE_KEY, contentToSave);
+            return true;
         } catch (error) {
             console.error('Error saving to localStorage:', error);
+            // Try clearing some space in localStorage if it's full
+            try {
+                // Remove old items if storage is full
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key !== STORAGE_KEY) {
+                        localStorage.removeItem(key);
+                    }
+                }
+                // Try saving again
+                localStorage.setItem(STORAGE_KEY, contentToSave);
+                return true;
+            } catch (retryError) {
+                console.error('Failed to save even after cleanup:', retryError);
+                return false;
+            }
         }
     },
     
@@ -458,7 +477,13 @@ async function init() {
         workDelay: 300,
     });
 
-    editor.on('change', debouncedPreviewUpdate);
+    // Add auto-save functionality
+    editor.on('change', (cm) => {
+        debouncedPreviewUpdate();
+        // Save to localStorage
+        const content = cm.getValue();
+        storage.save(content);
+    });
     
     editor.focus();
     editor.execCommand('selectAll');
