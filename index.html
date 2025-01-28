@@ -279,18 +279,15 @@
 <script type="text/javascript">
 const defaultStuff = `<html>
  <head></head>
-
 <body>
-    <b> Edit code left, see the result right  </b>
-    <div id="counter">0</div>
-    <script\> 
-       let counter = 0;
-       setInterval(function() {
-          document.getElementById('counter').innerHTML = counter++;
-       }, 1000);
-    <\/script>
-</body>
 
+    <div id="message"></div>
+
+    <script\> 
+       document.getElementById('message').innerHTML = 'Edit code left, see the result right';
+    <\/script>
+
+</body>
 <html>`;
 const STORAGE_KEY = 'realtimehtml_code';
 let editor;
