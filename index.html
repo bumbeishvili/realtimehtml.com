@@ -59,20 +59,24 @@
 <link rel="icon" href="./vector.png">
 <link rel="apple-touch-icon" href="./vector.png">
 
+<!-- Preload critical resources -->
+<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css" as="style">
+<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js" as="script">
+
 <!-- Global site tag (gtag.js) - Google Analytics -->
-<script async src="https://www.googletagmanager.com/gtag/js?id=G-7E9MWZLQHL"></script>
+<script async defer src="https://www.googletagmanager.com/gtag/js?id=G-7E9MWZLQHL"></script>
 
 <!-- Add CodeMirror CSS and JavaScript -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
 
 <!-- Add Split.js -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
 
 <style>
 /* Base styles */
@@ -273,7 +277,21 @@
 </script>
 
 <script type="text/javascript">
-const defaultStuff = ` <b> Edit code left, see the result right  </b>`;
+const defaultStuff = `<html>
+ <head></head>
+
+<body>
+    <b> Edit code left, see the result right  </b>
+    <div id="counter">0</div>
+    <script\> 
+       let counter = 0;
+       setInterval(function() {
+          document.getElementById('counter').innerHTML = counter++;
+       }, 1000);
+    <\/script>
+</body>
+
+<html>`;
 const STORAGE_KEY = 'realtimehtml_code';
 let editor;
 let previousContent = '';
@@ -368,30 +386,39 @@ async function shareCode() {
     }
 }
 
+// Debounce function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
 // Preview update function
-function updatePreview() {
+const debouncedPreviewUpdate = debounce(() => {
     const newContent = editor.getValue();
     if (previousContent === newContent) return;
     
     previousContent = newContent;
     const rightPanel = document.querySelector('#right-panel');
-    const oldIframe = document.querySelector('#preview');
+    const iframe = document.querySelector('#preview') || document.createElement('iframe');
     
-    const iframe = document.createElement('iframe');
-    iframe.id = 'preview';
-    iframe.style.cssText = 'width: 100%; height: 100%; border: none;';
-    iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-modals allow-forms allow-popups');
-    
-    if (oldIframe) {
-        rightPanel.removeChild(oldIframe);
+    if (!iframe.id) {
+        iframe.id = 'preview';
+        iframe.style.cssText = 'width: 100%; height: 100%; border: none;';
+        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-modals allow-forms allow-popups');
+        rightPanel.appendChild(iframe);
     }
-    rightPanel.appendChild(iframe);
     
+    // Use srcdoc for better performance
     const content = `<!DOCTYPE html><html><head><meta charset="utf-8"></head><body>${newContent}</body></html>`;
-    iframe.contentWindow.document.open();
-    iframe.contentWindow.document.write(content);
-    iframe.contentWindow.document.close();
-}
+    iframe.srcdoc = content;
+}, 150);
 
 // Initialize editor
 async function init() {
@@ -427,19 +454,19 @@ async function init() {
         indentUnit: 2,
         tabSize: 2,
         lineWrapping: true,
+        viewportMargin: Infinity,
+        // Add performance options
+        firstLineNumber: 1,
+        workTime: 20,
+        workDelay: 300,
     });
 
-    editor.on('change', (cm) => {
-        storage.save(cm.getValue());
-        updatePreview();
-    });
+    editor.on('change', debouncedPreviewUpdate);
     
-    // Always focus and select content on initialization
     editor.focus();
     editor.execCommand('selectAll');
     
-    updatePreview();
-    setInterval(updatePreview, 150);
+    debouncedPreviewUpdate();
 }
 </script>
 </head>
