@@ -7,6 +7,52 @@ const STORAGE_KEYS = {
     MARKDOWN_EDITOR: 'markdown_editor_code'
 };
 
+// Embed code utility functions
+const embed = {
+    async copyCode(editor, type = 'editor') {
+        try {
+            const content = editor.getValue();
+            const encoded = btoa(unescape(encodeURIComponent(content)));
+            const currentPath = window.location.pathname;
+            const embedUrl = `${window.location.origin}${currentPath}#code=${encoded}`;
+            const embedCode = `<iframe src="${embedUrl}" style="width: 100%; height: 600px; border: none; border-radius: 4px; overflow: hidden;"></iframe>`;
+            
+            if (navigator.clipboard && window.isSecureContext) {
+                await navigator.clipboard.writeText(embedCode);
+            } else {
+                const textarea = document.createElement('textarea');
+                textarea.value = embedCode;
+                textarea.style.position = 'fixed';
+                textarea.style.opacity = '0';
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+            }
+
+            const button = document.getElementById('embedButton');
+            button.textContent = 'Copied!';
+            
+            setTimeout(() => {
+                button.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/></svg>Copy embed code';
+            }, 2000);
+
+            return true;
+        } catch (error) {
+            console.error('Error copying embed code:', error);
+            return false;
+        }
+    },
+
+    getCode(editor) {
+        const content = editor.getValue();
+        const encoded = btoa(unescape(encodeURIComponent(content)));
+        const currentPath = window.location.pathname;
+        const embedUrl = `${window.location.origin}${currentPath}#code=${encoded}`;
+        return `<iframe src="${embedUrl}" style="width: 100%; height: 600px; border: none; border-radius: 4px; overflow: hidden;"></iframe>`;
+    }
+};
+
 // Storage utility functions
 const storage = {
     save(key, content, defaultContent) {
@@ -77,4 +123,4 @@ const storage = {
     }
 };
 
-export { STORAGE_KEYS, storage };
+export { STORAGE_KEYS, storage, embed };

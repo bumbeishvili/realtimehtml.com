@@ -73,6 +73,7 @@
 <!-- Add CodeMirror CSS and JavaScript -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+<link rel="stylesheet" href="./scrollbar.css">
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
@@ -98,6 +99,64 @@
     --modal-bg: #2d2d2d;
     --modal-hover: #3d3d3d;
     --transition-default: all 0.2s ease;
+}
+
+/* Global scrollbar styles */
+html {
+    scrollbar-width: thin;
+    scrollbar-color: #666 #2d2d2d;
+}
+
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #2d2d2d;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #666;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #777;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+::-webkit-scrollbar-corner {
+    background: #2d2d2d;
+}
+
+/* Override CodeMirror scrollbars */
+.CodeMirror-vscrollbar::-webkit-scrollbar,
+.CodeMirror-hscrollbar::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+.CodeMirror-vscrollbar::-webkit-scrollbar-track,
+.CodeMirror-hscrollbar::-webkit-scrollbar-track {
+    background: #2d2d2d;
+}
+
+.CodeMirror-vscrollbar::-webkit-scrollbar-thumb,
+.CodeMirror-hscrollbar::-webkit-scrollbar-thumb {
+    background: #666;
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+}
+
+.CodeMirror-vscrollbar::-webkit-scrollbar-thumb:hover,
+.CodeMirror-hscrollbar::-webkit-scrollbar-thumb:hover {
+    background: #777;
 }
 
 /* Editor styles */
@@ -290,12 +349,14 @@
 </script>
 
 <script type="module">
-import { storage, STORAGE_KEYS } from './utils.js';
+import { storage, STORAGE_KEYS, embed } from './utils.js';
 
 // Modal functions
 const modal = {
     show() {
         document.getElementById('shareModal').classList.add('show');
+        // Update embed code preview
+        document.getElementById('embedCode').textContent = embed.getCode(editor);
     },
     
     hide() {
@@ -306,6 +367,7 @@ const modal = {
 // Make modal functions globally available
 window.modal = modal;
 window.shareCode = shareCode;
+window.copyEmbedCode = copyEmbedCode;
 
 const defaultStuff = `<html>
  <head></head>
@@ -547,6 +609,14 @@ window.addEventListener('load', function() {
     });
     init();
 });
+
+// Add copyEmbedCode function
+async function copyEmbedCode() {
+    const success = await embed.copyCode(editor);
+    if (!success) {
+        alert('Failed to copy embed code. Please try again.');
+    }
+}
 </script>
 </head>
 <body style="margin: 0; padding: 0; overflow: hidden;">
@@ -576,13 +646,34 @@ window.addEventListener('load', function() {
 
             <div class="share-option">
                 <h3>Option 2: Quick Share (URL Compressed)</h3>
-                <p>Get an instantly shareable link with your code compressed into the URL.<br>
+                <p>Get an instantly shareable link with your markdown compressed into the URL.<br>
                    Note: This might not work for very large code files (more than 1200 lines). </p>
                 <button id="compressedButton" class="share-button" onclick="shareCode()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/>
                     </svg>
                     Copy compressed URL
+                </button>
+            </div>
+
+            <div class="share-option">
+                <h3>Option 3: Embed Code</h3>
+                <p>Add this HTML code to embed the editor in your website. You can test the embed code in this editor itself:</p>
+                <div class="code-container" style="background: #404040; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
+                    <code id="embedCode" style="color: #fff; display: block; white-space: pre-wrap; word-wrap: break-word; font-family: monospace; max-height: 200px; overflow-y: auto; overflow-x: auto; scrollbar-width: thin; scrollbar-color: #666 #404040; padding-right: 10px;">
+                        <style>
+                            #embedCode::-webkit-scrollbar { width: 8px; height: 8px; }
+                            #embedCode::-webkit-scrollbar-track { background: #404040; border-radius: 4px; }
+                            #embedCode::-webkit-scrollbar-thumb { background: #666; border-radius: 4px; border: 2px solid #404040; }
+                            #embedCode::-webkit-scrollbar-thumb:hover { background: #777; }
+                        </style>
+                    </code>
+                </div>
+                <button id="embedButton" class="share-button" onclick="copyEmbedCode(); gtag('event', 'click', {'event_category': 'Share', 'event_label': 'Embed Code Button - index.html', 'value': 1});">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/>
+                    </svg>
+                    Copy embed code
                 </button>
             </div>
         </div>
