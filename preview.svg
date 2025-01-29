@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="1200" height="630" viewBox="0 0 1200 630" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Background -->
+    <rect width="1200" height="630" fill="#282A36"/>
+    
+    <!-- Editor Window -->
+    <rect x="100" y="80" width="1000" height="470" rx="8" fill="#1E1F29"/>
+    
+    <!-- Window Controls -->
+    <circle cx="140" cy="120" r="8" fill="#FF5F56"/>
+    <circle cx="170" cy="120" r="8" fill="#FFBD2E"/>
+    <circle cx="200" cy="120" r="8" fill="#27C93F"/>
+    
+    <!-- Code Lines -->
+    <rect x="140" y="160" width="440" height="16" rx="2" fill="#FF79C6" opacity="0.8"/>
+    <rect x="140" y="190" width="380" height="16" rx="2" fill="#8BE9FD" opacity="0.8"/>
+    <rect x="140" y="220" width="420" height="16" rx="2" fill="#50FA7B" opacity="0.8"/>
+    <rect x="140" y="250" width="360" height="16" rx="2" fill="#FFB86C" opacity="0.8"/>
+    <rect x="140" y="280" width="400" height="16" rx="2" fill="#BD93F9" opacity="0.8"/>
+    
+    <!-- Preview Window -->
+    <rect x="600" y="160" width="460" height="350" rx="4" fill="#F8F8F2" opacity="0.1"/>
+    
+    <!-- Title -->
+    <text x="600" y="580" font-family="system-ui, -apple-system, sans-serif" font-size="48" font-weight="bold" fill="#F8F8F2">
+        Real-time HTML Editor
+    </text>
+    
+    <!-- Subtitle -->
+    <text x="600" y="610" font-family="system-ui, -apple-system, sans-serif" font-size="24" fill="#6272A4">
+        Live Preview with Instant Results
+    </text>
+</svg> 
