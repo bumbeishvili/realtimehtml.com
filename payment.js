@@ -29,7 +29,7 @@ const currentConfig = isLive ? stripeConfig.live : stripeConfig.test;
 const stripe = Stripe(currentConfig.publishableKey);
 
 // Configuration
-const VISIT_LIMIT = 100; // Configurable visit limit
+const VISIT_LIMIT = 1; // Configurable visit limit
 const TRIAL_EXTENSION = 10; // Number of additional trials when clicking "Later"
 const PAYMENT_STORAGE_KEY = 'visit_count';
 const PAYMENT_STATUS_KEY = 'has_donated';
@@ -148,6 +148,7 @@ function createModal() {
             <button class="payment-modal-close">&times;</button>
             <h2>Support Our Platform 🙏</h2>
             <p>Thank you for being an active user! To help keep this tool free and maintain our servers, would you consider making a small donation?</p>
+            <p style="font-size: 14px; color: #999;">Once you make a donation, we'll remember your support and won't show this popup again in this browser.</p>
             <div class="payment-error"></div>
             <div>
                 <button class="payment-button">Make a Donation</button>
