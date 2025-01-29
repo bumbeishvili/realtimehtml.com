@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<title>Tailwind CSS Editor - Live Preview with Real-time Class Suggestions</title>
+
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="Free online Tailwind CSS editor with instant live preview and intelligent class suggestions. Build beautiful UI components with Tailwind CSS classes in real-time. Perfect for web developers, designers, and rapid prototyping.">
+<meta name="author" content="realtimehtml.com">
+<meta name="keywords" content="Tailwind CSS editor, Tailwind playground, live preview, real-time editor, code editor, web development, Tailwind CSS, UI components, CSS framework, utility classes, responsive design, online editor, free editor, coding tool">
+<meta name="robots" content="index, follow">
+<meta name="googlebot" content="index, follow">
+<meta name="google" content="nositelinkssearchbox">
+<meta name="google" content="notranslate">
+
+<!-- Canonical URL -->
+<link rel="canonical" href="https://realtimehtml.com/tailwind">
+
+<!-- Open Graph / Facebook -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://realtimehtml.com/tailwind">
+<meta property="og:title" content="Tailwind CSS Editor - Live Preview with Class Suggestions">
+<meta property="og:description" content="Free online Tailwind CSS editor with instant live preview and intelligent class suggestions. Build beautiful UI components in real-time.">
+<meta property="og:image" content="https://realtimehtml.com/tailwind-preview.png">
+
+<!-- Twitter -->
+<meta property="twitter:card" content="summary_large_image">
+<meta property="twitter:url" content="https://realtimehtml.com/tailwind">
+<meta property="twitter:title" content="Tailwind CSS Editor - Live Preview with Class Suggestions">
+<meta property="twitter:description" content="Free online Tailwind CSS editor with instant live preview and intelligent class suggestions. Build beautiful UI components in real-time.">
+<meta property="twitter:image" content="https://realtimehtml.com/tailwind-preview.png">
+
+<!-- Structured Data -->
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  "name": "Tailwind CSS Editor",
+  "url": "https://realtimehtml.com/tailwind",
+  "description": "Free online Tailwind CSS editor with instant live preview and intelligent class suggestions. Build beautiful UI components with Tailwind CSS classes in real-time.",
+  "applicationCategory": "DeveloperApplication",
+  "operatingSystem": "Any",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "Real-time Tailwind CSS preview",
+    "Intelligent class suggestions",
+    "Component building",
+    "Split view editor",
+    "Mobile responsive",
+    "Auto-completion",
+    "Class validation",
+    "Code sharing"
+  ],
+  "screenshot": "https://realtimehtml.com/tailwind-preview.png",
+  "softwareVersion": "3.0",
+  "author": {
+    "@type": "Organization",
+    "name": "realtimehtml.com"
+  },
+  "keywords": "Tailwind CSS, code editor, live preview, UI components, utility classes, web development"
+}
+</script>
+
+<!-- Favicon -->
+<link rel="icon" href="./vector.png">
+<link rel="apple-touch-icon" href="./vector.png">
+
+<!-- Preload critical resources -->
+<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css" as="style">
+<link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js" as="script">
+<link rel="preload" href="https://cdn.tailwindcss.com" as="script">
+
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async defer src="https://www.googletagmanager.com/gtag/js?id=G-7E9MWZLQHL"></script>
+
+<!-- Add CodeMirror CSS and JavaScript -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.css">
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/html-hint.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/xml-hint.js"></script>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/anyword-hint.js"></script>
+
+<!-- Add Split.js -->
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
+
+<!-- Add Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+/* Base styles */
+:root {
+    --system-fonts: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    --modal-bg: #2d2d2d;
+    --modal-hover: #3d3d3d;
+    --transition-default: all 0.2s ease;
+}
+
+/* Editor styles */
+.CodeMirror {
+    height: 100vh;
+    font-size: 14px;
+}
+
+/* Split panel styles */
+.split {
+    display: flex;
+    width: 100vw;
+    height: 100vh;
+}
+
+.split-panel {
+    overflow: hidden;
+    height: 100vh;
+}
+
+#editor {
+    min-width: 0;  /* Required for proper flex behavior */
+}
+
+/* Gutter styles */
+.gutter {
+    background-color: #333;
+    background-repeat: no-repeat;
+    background-position: 50%;
+}
+
+.gutter:hover {
+    background-color: #444;
+}
+
+.gutter.gutter-horizontal {
+    cursor: col-resize;
+    width: 10px;
+}
+
+/* Share button styles */
+#shareButton {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10000;
+    width: 40px;
+    height: 40px;
+    background-color: var(--modal-bg);
+    color: white;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: var(--transition-default);
+}
+
+#shareButton:hover {
+    background-color: var(--modal-hover);
+    box-shadow: 0 3px 7px rgba(0,0,0,0.3);
+    transform: translateX(-50%) scale(1.05);
+}
+
+#shareButton:active {
+    transform: translateX(-50%) scale(0.95);
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 10001;
+    opacity: 0;
+    transition: var(--transition-default);
+    font-family: var(--system-fonts);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+}
+
+.modal.show {
+    display: flex;
+    opacity: 1;
+}
+
+.modal-content {
+    position: relative;
+    background: var(--modal-bg);
+    margin: auto;
+    padding: 25px;
+    border-radius: 8px;
+    width: 90%;
+    max-width: 500px;
+    color: #fff;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+}
+
+.modal-content h2 {
+    font-family: var(--system-fonts);
+    font-weight: 600;
+    font-size: 20px;
+    letter-spacing: -0.01em;
+    margin-top: 0;
+}
+
+.modal-close {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: none;
+    border: none;
+    color: #999;
+    cursor: pointer;
+    padding: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: var(--transition-default);
+}
+
+.modal-close:hover {
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+}
+
+/* Share options */
+.share-option {
+    background: #363636;
+    padding: 20px;
+    margin: 15px 0;
+    border-radius: 6px;
+    transition: var(--transition-default);
+}
+
+.share-option:hover {
+    background: #404040;
+}
+
+.share-option h3 {
+    margin: 0 0 10px 0;
+    font-size: 16px;
+    color: #fff;
+    font-weight: 500;
+}
+
+.share-option p {
+    margin: 0 0 15px 0;
+    color: #bbb;
+    font-size: 14px;
+    line-height: 1.5;
+    font-weight: 400;
+}
+
+.share-button {
+    font-family: var(--system-fonts);
+    font-weight: 500;
+    background: #4a4a4a;
+    color: white;
+    border: none;
+    padding: 8px 16px;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: var(--transition-default);
+}
+
+.share-button:hover {
+    background: #555;
+}
+</style>
+
+<script>
+  window.dataLayer = window.dataLayer || [];
+  function gtag(){dataLayer.push(arguments);}
+  gtag('js', new Date());
+
+  gtag('config', 'G-7E9MWZLQHL');
+</script>
+
+<script type="text/javascript">
+const defaultStuff = `<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <script src="https://cdn.tailwindcss.com"><\/script>
+</head>
+<body class="bg-gray-50 min-h-screen flex items-center justify-center p-4">
+    <div class="max-w-sm w-full bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow">
+        <div class="p-4 border-b flex items-center justify-between">
+            <span class="text-xl">✨ Welcome!</span>
+            <span class="text-gray-400 hover:text-gray-600 cursor-pointer">×</span>
+        </div>
+        <div class="p-4">
+            <p class="text-gray-600">Start editing to see the magic happen ✨</p>
+            <button class="mt-3 block w-full bg-blue-500 text-white text-center py-2 rounded-md hover:bg-blue-600">
+                Get Started
+            </button>
+        </div>
+    </div>
+</body>
+</html>`;
+const STORAGE_KEY = 'realtimehtml_code';
+let editor;
+let previousContent = '';
+
+// Local Storage functions
+const storage = {
+    save(content) {
+        try {
+            // If content is empty, save the default content instead
+            const contentToSave = content || defaultStuff;
+            localStorage.setItem(STORAGE_KEY, contentToSave);
+            return true;
+        } catch (error) {
+            console.error('Error saving to localStorage:', error);
+            // Try clearing some space in localStorage if it's full
+            try {
+                // Remove old items if storage is full
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    if (key !== STORAGE_KEY) {
+                        localStorage.removeItem(key);
+                    }
+                }
+                // Try saving again
+                localStorage.setItem(STORAGE_KEY, contentToSave);
+                return true;
+            } catch (retryError) {
+                console.error('Failed to save even after cleanup:', retryError);
+                return false;
+            }
+        }
+    },
+    
+    load() {
+        try {
+            return localStorage.getItem(STORAGE_KEY) || defaultStuff;
+        } catch (error) {
+            console.error('Error loading from localStorage:', error);
+            return defaultStuff;
+        }
+    }
+};
+
+// Modal functions
+const modal = {
+    show() {
+        document.getElementById('shareModal').classList.add('show');
+    },
+    
+    hide() {
+        document.getElementById('shareModal').classList.remove('show');
+    }
+};
+
+// Gist loading function
+async function loadGistContent(url) {
+    try {
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch Gist');
+        return await response.text();
+    } catch (error) {
+        console.error('Error loading gist:', error);
+        return null;
+    }
+}
+
+// Clipboard functions
+const clipboard = {
+    async copy(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text);
+        }
+        
+        // Fallback for browsers without clipboard API
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        
+        try {
+            document.execCommand('copy');
+            return Promise.resolve();
+        } catch (err) {
+            console.error('Failed to copy URL:', err);
+            return Promise.reject(err);
+        } finally {
+            document.body.removeChild(textarea);
+        }
+    }
+};
+
+// Share functionality
+async function shareCode() {
+    const content = editor.getValue();
+    try {
+        const encoded = btoa(unescape(encodeURIComponent(content)));
+        const shareUrl = `${window.location.origin}#code=${encoded}`;
+        
+        await clipboard.copy(shareUrl);
+        const button = document.getElementById('compressedButton');
+        button.textContent = 'Copied!';
+        
+        setTimeout(() => {
+            button.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/></svg>Copy compressed URL';
+        }, 2000);
+    } catch (error) {
+        console.error('Error sharing code:', error);
+        alert('Could not automatically copy the URL. Here it is to copy manually:\n\n' + shareUrl);
+    }
+}
+
+// Debounce function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Preview update function
+const debouncedPreviewUpdate = debounce(() => {
+    const newContent = editor.getValue();
+    if (previousContent === newContent) return;
+    
+    previousContent = newContent;
+    const rightPanel = document.querySelector('#right-panel');
+    const iframe = document.querySelector('#preview') || document.createElement('iframe');
+    
+    if (!iframe.id) {
+        iframe.id = 'preview';
+        iframe.style.cssText = 'width: 100%; height: 100%; border: none;';
+        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-modals allow-forms allow-popups');
+        rightPanel.appendChild(iframe);
+    }
+    
+    // Process the content to add loop protection and ensure Tailwind is included
+    const processedContent = newContent.replace(/\b(for|while)\b\s*\(/g, (match, keyword, offset) => {
+        const lineNumber = newContent.substr(0, offset).split('\n').length;
+        return `${match}loopProtect(${lineNumber}),`;
+    });
+
+    // Create the protected HTML content with Tailwind
+    const html = [
+        '<!DOCTYPE html>',
+        '<html>',
+        '<head>',
+        '    <meta charset="utf-8">',
+        '    <script src="https://cdn.tailwindcss.com"><\/script>',
+        '    <script>',
+        '        // Loop protection',
+        '        window.__loopProtect = true;',
+        '        window.__loopProtectTimeout = 500;',
+        '        let __loopCount = {};',
+        '',
+        '        // Override setTimeout and setInterval',
+        '        const originalSetTimeout = setTimeout;',
+        '        const originalSetInterval = setInterval;',
+        '',
+        '        window.setTimeout = function(fn, delay) {',
+        '            if (delay < 10) delay = 10;',
+        '            return originalSetTimeout.call(this, fn, delay);',
+        '        };',
+        '',
+        '        window.setInterval = function(fn, delay) {',
+        '            if (delay < 10) delay = 10;',
+        '            return originalSetInterval.call(this, fn, delay);',
+        '        };',
+        '',
+        '        function loopProtect(line) {',
+        '            if (!window.__loopProtect) return;',
+        '            const key = "loop" + line;',
+        '            __loopCount[key] = (__loopCount[key] || 0) + 1;',
+        '',
+        '            if (__loopCount[key] > 1000000) {',
+        '                const msg = "Potential infinite loop detected on line " + line;',
+        '                console.error(msg);',
+        '                document.body.innerHTML = \'<div style="color: red; font-family: monospace; padding: 20px;">\' + msg + "</div>";',
+        '                throw new Error(msg);',
+        '            }',
+        '',
+        '            if (__loopCount[key] === 1) {',
+        '                setTimeout(() => { __loopCount[key] = 0; }, window.__loopProtectTimeout);',
+        '            }',
+        '            return true;',
+        '        }',
+        '    <\/script>',
+        '</head>',
+        '<body>',
+        processedContent,
+        '</body>',
+        '</html>'
+    ].join('\n');
+    
+    iframe.srcdoc = html;
+}, 150);
+
+// Initialize editor
+async function init() {
+    let initialContent = defaultStuff;
+    const hash = window.location.hash;
+
+    if (hash) {
+        if (hash.startsWith('#code=')) {
+            try {
+                const encoded = hash.substring(6);
+                const content = decodeURIComponent(escape(atob(encoded)));
+                if (content) initialContent = content;
+            } catch (error) {
+                console.error('Error loading shared code:', error);
+            }
+        } else if (hash.startsWith('#@') || hash.startsWith('#http')) {
+            const gistUrl = hash.startsWith('#@') ? hash.substring(2) : hash.substring(1);
+            const content = await loadGistContent(gistUrl);
+            if (content) initialContent = content;
+        }
+    } else {
+        initialContent = storage.load();
+    }
+
+    // Expanded Tailwind class suggestions
+    const tailwindClasses = [
+        // Layout
+        'container', 'flex', 'grid', 'block', 'inline', 'inline-block', 'hidden', 'flow-root', 'contents', 'list-item', 'relative', 'absolute', 'fixed', 'sticky',
+        
+        // Basic Colors
+        'text-white', 'text-black', 'text-transparent', 'text-current',
+        'bg-white', 'bg-black', 'bg-transparent', 'bg-current',
+        'border-white', 'border-black', 'border-transparent', 'border-current',
+        
+        // Colors (with shades)
+        ...['slate', 'gray', 'zinc', 'neutral', 'stone', 'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose'].flatMap(color => [
+            `text-${color}-50`, `text-${color}-100`, `text-${color}-200`, `text-${color}-300`, `text-${color}-400`,
+            `text-${color}-500`, `text-${color}-600`, `text-${color}-700`, `text-${color}-800`, `text-${color}-900`, `text-${color}-950`,
+            `bg-${color}-50`, `bg-${color}-100`, `bg-${color}-200`, `bg-${color}-300`, `bg-${color}-400`,
+            `bg-${color}-500`, `bg-${color}-600`, `bg-${color}-700`, `bg-${color}-800`, `bg-${color}-900`, `bg-${color}-950`,
+            `border-${color}-50`, `border-${color}-100`, `border-${color}-200`, `border-${color}-300`, `border-${color}-400`,
+            `border-${color}-500`, `border-${color}-600`, `border-${color}-700`, `border-${color}-800`, `border-${color}-900`, `border-${color}-950`,
+        ]),
+        
+        // Flexbox
+        'flex-row', 'flex-row-reverse', 'flex-col', 'flex-col-reverse', 'flex-wrap', 'flex-wrap-reverse', 'flex-nowrap',
+        'flex-1', 'flex-auto', 'flex-initial', 'flex-none', 'flex-grow', 'flex-grow-0', 'flex-shrink', 'flex-shrink-0',
+        'justify-start', 'justify-end', 'justify-center', 'justify-between', 'justify-around', 'justify-evenly',
+        'items-start', 'items-end', 'items-center', 'items-baseline', 'items-stretch',
+        'self-auto', 'self-start', 'self-end', 'self-center', 'self-stretch', 'self-baseline',
+        
+        // Background Utilities
+        'bg-none', 'bg-gradient-to-t', 'bg-gradient-to-tr', 'bg-gradient-to-r', 'bg-gradient-to-br', 
+        'bg-gradient-to-b', 'bg-gradient-to-bl', 'bg-gradient-to-l', 'bg-gradient-to-tl',
+        'bg-clip-border', 'bg-clip-padding', 'bg-clip-content', 'bg-clip-text',
+        'bg-fixed', 'bg-local', 'bg-scroll',
+        'bg-center', 'bg-top', 'bg-right', 'bg-bottom', 'bg-left',
+        'bg-repeat', 'bg-no-repeat', 'bg-repeat-x', 'bg-repeat-y', 'bg-repeat-round', 'bg-repeat-space',
+        'bg-auto', 'bg-cover', 'bg-contain',
+        
+        // Text Decoration
+        'underline', 'overline', 'line-through', 'no-underline',
+        'decoration-solid', 'decoration-double', 'decoration-dotted', 'decoration-dashed', 'decoration-wavy',
+        'decoration-0', 'decoration-1', 'decoration-2', 'decoration-4', 'decoration-8',
+        'decoration-auto', 'decoration-from-font',
+        
+        // Text Transform
+        'uppercase', 'lowercase', 'capitalize', 'normal-case',
+        
+        // Text Overflow
+        'truncate', 'text-ellipsis', 'text-clip', 'break-normal', 'break-words', 'break-all',
+        
+        // Font Family
+        'font-sans', 'font-serif', 'font-mono',
+        
+        // Text Alignment
+        'text-left', 'text-center', 'text-right', 'text-justify', 'text-start', 'text-end',
+        
+        // Lists
+        'list-none', 'list-disc', 'list-decimal', 'list-inside', 'list-outside',
+        
+        // Placeholder Color
+        'placeholder-transparent', 'placeholder-current', 'placeholder-black', 'placeholder-white',
+        
+        // Grid
+        'grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4', 'grid-cols-5', 'grid-cols-6', 'grid-cols-12',
+        'grid-rows-1', 'grid-rows-2', 'grid-rows-3', 'grid-rows-4', 'grid-rows-5', 'grid-rows-6',
+        'gap-0', 'gap-1', 'gap-2', 'gap-3', 'gap-4', 'gap-5', 'gap-6', 'gap-8', 'gap-10', 'gap-12',
+        'col-span-1', 'col-span-2', 'col-span-3', 'col-span-4', 'col-span-5', 'col-span-6', 'col-span-12',
+        'row-span-1', 'row-span-2', 'row-span-3', 'row-span-4', 'row-span-5', 'row-span-6',
+        
+        // Spacing
+        'p-0', 'p-1', 'p-2', 'p-3', 'p-4', 'p-5', 'p-6', 'p-8', 'p-10', 'p-12', 'p-16', 'p-20',
+        'px-0', 'px-1', 'px-2', 'px-3', 'px-4', 'px-5', 'px-6', 'px-8', 'px-10', 'px-12', 'px-16', 'px-20',
+        'py-0', 'py-1', 'py-2', 'py-3', 'py-4', 'py-5', 'py-6', 'py-8', 'py-10', 'py-12', 'py-16', 'py-20',
+        'm-0', 'm-1', 'm-2', 'm-3', 'm-4', 'm-5', 'm-6', 'm-8', 'm-10', 'm-12', 'm-16', 'm-20',
+        'mx-0', 'mx-1', 'mx-2', 'mx-3', 'mx-4', 'mx-5', 'mx-6', 'mx-8', 'mx-10', 'mx-12', 'mx-16', 'mx-20', 'mx-auto',
+        'my-0', 'my-1', 'my-2', 'my-3', 'my-4', 'my-5', 'my-6', 'my-8', 'my-10', 'my-12', 'my-16', 'my-20',
+        'space-x-0', 'space-x-1', 'space-x-2', 'space-x-3', 'space-x-4', 'space-x-6', 'space-x-8', 'space-x-10', 'space-x-12',
+        'space-y-0', 'space-y-1', 'space-y-2', 'space-y-3', 'space-y-4', 'space-y-6', 'space-y-8', 'space-y-10', 'space-y-12',
+        
+        // Sizing
+        'w-0', 'w-1', 'w-2', 'w-3', 'w-4', 'w-5', 'w-6', 'w-8', 'w-10', 'w-12', 'w-16', 'w-20', 'w-24', 'w-32', 'w-40', 'w-48', 'w-56', 'w-64',
+        'w-auto', 'w-full', 'w-screen', 'w-min', 'w-max', 'w-fit', 'w-1/2', 'w-1/3', 'w-2/3', 'w-1/4', 'w-3/4',
+        'h-0', 'h-1', 'h-2', 'h-3', 'h-4', 'h-5', 'h-6', 'h-8', 'h-10', 'h-12', 'h-16', 'h-20', 'h-24', 'h-32', 'h-40', 'h-48', 'h-56', 'h-64',
+        'h-auto', 'h-full', 'h-screen', 'h-min', 'h-max', 'h-fit',
+        
+        // Typography
+        'text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl', 'text-5xl', 'text-6xl', 'text-7xl', 'text-8xl', 'text-9xl',
+        'font-thin', 'font-extralight', 'font-light', 'font-normal', 'font-medium', 'font-semibold', 'font-bold', 'font-extrabold', 'font-black',
+        'tracking-tighter', 'tracking-tight', 'tracking-normal', 'tracking-wide', 'tracking-wider', 'tracking-widest',
+        'leading-3', 'leading-4', 'leading-5', 'leading-6', 'leading-7', 'leading-8', 'leading-9', 'leading-10',
+        
+        // Borders
+        'border', 'border-0', 'border-2', 'border-4', 'border-8', 'border-x', 'border-y', 'border-t', 'border-r', 'border-b', 'border-l',
+        'rounded-none', 'rounded-sm', 'rounded', 'rounded-md', 'rounded-lg', 'rounded-xl', 'rounded-2xl', 'rounded-3xl', 'rounded-full',
+        'border-solid', 'border-dashed', 'border-dotted', 'border-double', 'border-hidden', 'border-none',
+        
+        // Effects
+        'shadow-sm', 'shadow', 'shadow-md', 'shadow-lg', 'shadow-xl', 'shadow-2xl', 'shadow-inner', 'shadow-none',
+        'opacity-0', 'opacity-5', 'opacity-10', 'opacity-20', 'opacity-25', 'opacity-30', 'opacity-40', 'opacity-50',
+        'opacity-60', 'opacity-70', 'opacity-75', 'opacity-80', 'opacity-90', 'opacity-95', 'opacity-100',
+        'blur-none', 'blur-sm', 'blur', 'blur-md', 'blur-lg', 'blur-xl', 'blur-2xl', 'blur-3xl',
+        
+        // Transitions & Animation
+        'transition', 'transition-all', 'transition-colors', 'transition-opacity', 'transition-shadow', 'transition-transform',
+        'duration-75', 'duration-100', 'duration-150', 'duration-200', 'duration-300', 'duration-500', 'duration-700', 'duration-1000',
+        'ease-linear', 'ease-in', 'ease-out', 'ease-in-out',
+        'animate-none', 'animate-spin', 'animate-ping', 'animate-pulse', 'animate-bounce',
+        
+        // Transforms
+        'scale-0', 'scale-50', 'scale-75', 'scale-90', 'scale-95', 'scale-100', 'scale-105', 'scale-110', 'scale-125', 'scale-150',
+        'rotate-0', 'rotate-45', 'rotate-90', 'rotate-180', '-rotate-45', '-rotate-90', '-rotate-180',
+        'translate-x-0', 'translate-x-1', 'translate-x-2', 'translate-x-4', 'translate-x-8', '-translate-x-1', '-translate-x-2',
+        'translate-y-0', 'translate-y-1', 'translate-y-2', 'translate-y-4', 'translate-y-8', '-translate-y-1', '-translate-y-2',
+        
+        // Interactivity
+        'cursor-auto', 'cursor-default', 'cursor-pointer', 'cursor-wait', 'cursor-text', 'cursor-move', 'cursor-help', 'cursor-not-allowed',
+        'select-none', 'select-text', 'select-all', 'select-auto',
+        'resize-none', 'resize-y', 'resize-x', 'resize',
+        
+        // Filters
+        'grayscale-0', 'grayscale', 'invert-0', 'invert', 'sepia-0', 'sepia',
+        'brightness-0', 'brightness-50', 'brightness-75', 'brightness-90', 'brightness-100', 'brightness-105', 'brightness-110', 'brightness-125', 'brightness-150', 'brightness-200',
+        
+        // State Variants
+        'hover:', 'focus:', 'active:', 'disabled:', 'visited:', 'checked:', 'first:', 'last:', 'odd:', 'even:', 'group-hover:', 'group-focus:', 'focus-within:', 'focus-visible:', 'motion-safe:', 'motion-reduce:', 'dark:',
+        
+        // Responsive Variants
+        'sm:', 'md:', 'lg:', 'xl:', '2xl:'
+    ];
+
+    editor = CodeMirror(document.querySelector('#editor'), {
+        value: initialContent,
+        mode: 'htmlmixed',
+        theme: 'dracula',
+        lineNumbers: true,
+        autoCloseTags: true,
+        autoCloseBrackets: true,
+        matchBrackets: true,
+        indentUnit: 2,
+        tabSize: 2,
+        lineWrapping: true,
+        viewportMargin: Infinity,
+        hintOptions: {
+            completeSingle: false,
+            hint: function(editor) {
+                const cursor = editor.getCursor();
+                const token = editor.getTokenAt(cursor);
+                const line = editor.getLine(cursor.line);
+                
+                // Check if we're in a class attribute
+                if (token.type === "string" || 
+                    (token.type === "attribute" && token.string === "class") || 
+                    (line.slice(0, cursor.ch).includes('class="') || line.slice(0, cursor.ch).includes("class='"))) {
+                    
+                    const currentWord = token.string.slice(0, cursor.ch - token.start);
+                    const lastClass = currentWord.split(/[\s"']+/).pop() || '';
+
+                    const matchingClasses = tailwindClasses
+                        .filter(cls => cls.toLowerCase().startsWith(lastClass.toLowerCase()))
+                        .map(cls => ({
+                            text: cls,
+                            displayText: cls,
+                            className: 'tailwind-suggestion',
+                            hint: function(cm, data, completion) {
+                                const from = {line: cursor.line, ch: cursor.ch - lastClass.length};
+                                const to = {line: cursor.line, ch: cursor.ch};
+                                cm.replaceRange(completion.text, from, to);
+                            }
+                        }));
+
+                    if (matchingClasses.length === 0) return;
+
+                    return {
+                        list: matchingClasses,
+                        from: CodeMirror.Pos(cursor.line, cursor.ch - lastClass.length),
+                        to: cursor.ch
+                    };
+                }
+            }
+        }
+    });
+
+    // Add auto-suggestions on typing
+    editor.on('keyup', function(cm, event) {
+        if (!/^[a-zA-Z0-9-]$/.test(event.key)) return;
+        
+        const cursor = cm.getCursor();
+        const token = cm.getTokenAt(cursor);
+        const line = cm.getLine(cursor.line);
+        
+        if (line.includes('class=') || token.type === "string" || token.type === "attribute") {
+            cm.showHint({ completeSingle: false });
+        }
+    });
+
+    // Add auto-save functionality
+    editor.on('change', (cm) => {
+        debouncedPreviewUpdate();
+        // Save to localStorage
+        const content = cm.getValue();
+        storage.save(content);
+    });
+    
+    editor.focus();
+    editor.execCommand('selectAll');
+    
+    debouncedPreviewUpdate();
+
+    // Add custom styles for suggestions
+    const style = document.createElement('style');
+    style.textContent = `
+        .CodeMirror-hints {
+            background: #282a36;
+            border: 1px solid #44475a;
+            border-radius: 4px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+        }
+        .CodeMirror-hint {
+            color: #f8f8f2;
+            padding: 4px 8px;
+            border-radius: 2px;
+            margin: 0;
+        }
+        .CodeMirror-hint-active {
+            background: #44475a;
+        }
+        .hint-item {
+            font-family: monospace;
+            font-size: 13px;
+        }
+    `;
+    document.head.appendChild(style);
+}
+</script>
+</head>
+<body style="margin: 0; padding: 0; overflow: hidden;">
+    <button id="shareButton" onclick="modal.show()" title="Share code">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" fill="currentColor"/>
+        </svg>
+    </button>
+
+    <!-- Share Modal -->
+    <div id="shareModal" class="modal" onclick="if(event.target === this) modal.hide()">
+        <div class="modal-content">
+            <button class="modal-close" onclick="modal.hide()">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
+                </svg>
+            </button>
+            <h2 style="margin-top: 0;">Share Your Code</h2>
+            
+            <div class="share-option">
+                <h3>Option 1: Share via GitHub Gist (Recommended)</h3>
+                <p>1. Create a new Gist at <a href="https://gist.github.com" target="_blank" style="color: #7cb7ff;">gist.github.com</a><br>
+                   2. Copy your code and paste it there<br>
+                   3. After saving, click "Raw" button<br>
+                   4. Add your raw Gist URL to: <code style="background: #404040; padding: 2px 6px; border-radius: 4px;">realtimehtml.com#</code></p>
+            </div>
+
+            <div class="share-option">
+                <h3>Option 2: Quick Share (URL Compressed)</h3>
+                <p>Get an instantly shareable link with your code compressed into the URL.<br>
+                   Note: This might not work for very large code files (more than 1200 lines). </p>
+                <button id="compressedButton" class="share-button" onclick="shareCode()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/>
+                    </svg>
+                    Copy compressed URL
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="split">
+        <div class="split-panel" id="left-panel">
+            <div id="editor"></div>
+        </div>
+        <div class="gutter"></div>
+        <div class="split-panel" id="right-panel">
+            <iframe id="preview" sandbox="allow-scripts allow-same-origin allow-modals allow-forms allow-popups" style="width: 100%; height: 100%; border: none;"></iframe>
+        </div>
+    </div>
+    <script>
+        window.onload = function() {
+            Split(['#left-panel', '#right-panel'], {
+                sizes: [50, 50],
+                minSize: [200, 200],
+                gutterSize: 10,
+                dragInterval: 1,
+                snapOffset: 0,
+                elementStyle: (dimension, size, gutterSize) => ({
+                    'flex-basis': `calc(${size}% - ${gutterSize}px)`,
+                }),
+                gutterStyle: (dimension, gutterSize) => ({
+                    'flex-basis': `${gutterSize}px`,
+                }),
+                onDrag: () => editor.refresh()
+            });
+            init();
+        };
+    </script>
+</body>
+</html>
