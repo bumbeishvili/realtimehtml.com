@@ -165,12 +165,26 @@ function createModal() {
     
     closeBtn.addEventListener('click', () => hideModal());
     laterBtn.addEventListener('click', () => {
+        // Track "Later" button click
+        gtag('event', 'click', {
+            'event_category': 'Donation',
+            'event_label': 'Later Button',
+            'value': 1
+        });
         // Reset visit count to give more trials
         storage.saveVisitCount(VISIT_LIMIT - TRIAL_EXTENSION);
         hideModal();
     });
     
-    paymentBtn.addEventListener('click', handlePayment);
+    paymentBtn.addEventListener('click', () => {
+        // Track donation button click
+        gtag('event', 'click', {
+            'event_category': 'Donation',
+            'event_label': 'Donate Button',
+            'value': 1
+        });
+        handlePayment();
+    });
     
     modal.addEventListener('click', (e) => {
         if (e.target === modal) hideModal();
