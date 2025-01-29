@@ -373,6 +373,22 @@ const modal = {
 // Gist loading function
 async function loadGistContent(url) {
     try {
+        // Convert github.com URLs to raw content URLs
+        if (url.includes('github.com/gist/') || url.includes('gist.github.com/')) {
+            // If it's not already a raw URL, convert it
+            if (!url.includes('raw.githubusercontent.com') && !url.includes('/raw/')) {
+                // Handle both full and shortened URLs
+                url = url.replace('gist.github.com/', 'gist.githubusercontent.com/')
+                         .replace('github.com/gist/', 'gist.githubusercontent.com/')
+                         .replace('/blob/', '/raw/');
+                
+                // If URL doesn't end with /raw, add it
+                if (!url.endsWith('/raw')) {
+                    url = url + '/raw';
+                }
+            }
+        }
+
         const response = await fetch(url);
         if (!response.ok) throw new Error('Failed to fetch Gist');
         return await response.text();
@@ -414,7 +430,8 @@ async function shareCode() {
     const content = editor.getValue();
     try {
         const encoded = btoa(unescape(encodeURIComponent(content)));
-        const shareUrl = `${window.location.origin}#code=${encoded}`;
+        const baseUrl = window.location.href.split('#')[0];  // Get full URL path without hash
+        const shareUrl = `${baseUrl}#code=${encoded}`;
         
         await clipboard.copy(shareUrl);
         const button = document.getElementById('compressedButton');
@@ -533,8 +550,9 @@ async function init() {
             } catch (error) {
                 console.error('Error loading shared code:', error);
             }
-        } else if (hash.startsWith('#@') || hash.startsWith('#http')) {
-            const gistUrl = hash.startsWith('#@') ? hash.substring(2) : hash.substring(1);
+        } else if (hash.startsWith('#')) {
+            // Remove the # from the start of the hash
+            const gistUrl = hash.substring(1);
             const content = await loadGistContent(gistUrl);
             if (content) initialContent = content;
         }
@@ -797,7 +815,7 @@ async function init() {
                 <p>1. Create a new Gist at <a href="https://gist.github.com" target="_blank" style="color: #7cb7ff;">gist.github.com</a><br>
                    2. Copy your code and paste it there<br>
                    3. After saving, click "Raw" button<br>
-                   4. Add your raw Gist URL to: <code style="background: #404040; padding: 2px 6px; border-radius: 4px;">realtimehtml.com#</code></p>
+                   4. Add your raw Gist URL to: <code style="background: #404040; padding: 2px 6px; border-radius: 4px;">realtimehtml.com/tailwind#</code></p>
             </div>
 
             <div class="share-option">
