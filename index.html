@@ -254,10 +254,10 @@ html {
     position: relative;
     background: var(--modal-bg);
     margin: auto;
-    padding: 25px;
+    padding: 20px;
     border-radius: 8px;
     width: 90%;
-    max-width: 500px;
+    max-width: 600px;
     color: #fff;
     box-shadow: 0 4px 20px rgba(0,0,0,0.3);
 }
@@ -294,8 +294,8 @@ html {
 /* Share options */
 .share-option {
     background: #363636;
-    padding: 20px;
-    margin: 15px 0;
+    padding: 15px;
+    margin: 10px 0;
     border-radius: 6px;
     transition: var(--transition-default);
 }
@@ -305,14 +305,14 @@ html {
 }
 
 .share-option h3 {
-    margin: 0 0 10px 0;
+    margin: 0 0 8px 0;
     font-size: 16px;
     color: #fff;
     font-weight: 500;
 }
 
 .share-option p {
-    margin: 0 0 15px 0;
+    margin: 0 0 12px 0;
     color: #bbb;
     font-size: 14px;
     line-height: 1.5;
@@ -337,6 +337,13 @@ html {
 
 .share-button:hover {
     background: #555;
+}
+
+.code-container {
+    background: #404040;
+    padding: 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
 }
 </style>
 
@@ -638,16 +645,14 @@ async function copyEmbedCode() {
             
             <div class="share-option">
                 <h3>Option 1: Share via GitHub Gist (Recommended)</h3>
-                <p>1. Create a new Gist at <a href="https://gist.github.com" target="_blank" style="color: #7cb7ff;">gist.github.com</a><br>
-                   2. Copy your code and paste it there<br>
-                   3. After saving, click "Raw" button<br>
-                   4. Add your raw Gist URL to: <code style="background: #404040; padding: 2px 6px; border-radius: 4px;">realtimehtml.com#</code></p>
+                <p>Create a new Gist at <a href="https://gist.github.com" target="_blank" style="color: #7cb7ff;">gist.github.com</a>, paste your code,<br>
+                   click "Raw" after saving, then add the raw URL to:<br>
+                   <code style="background: #404040; padding: 2px 6px; border-radius: 4px;">realtimehtml.com#</code></p>
             </div>
 
             <div class="share-option">
                 <h3>Option 2: Quick Share (URL Compressed)</h3>
-                <p>Get an instantly shareable link with your markdown compressed into the URL.<br>
-                   Note: This might not work for very large code files (more than 1200 lines). </p>
+                <p>Get an instantly shareable link with your code compressed into the URL (max 1200 lines).</p>
                 <button id="compressedButton" class="share-button" onclick="shareCode()">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                         <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/>
