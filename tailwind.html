@@ -79,20 +79,30 @@
 <link rel="preload" href="https://cdn.tailwindcss.com" as="script">
 
 <!-- Global site tag (gtag.js) - Google Analytics -->
-<script async defer src="https://www.googletagmanager.com/gtag/js?id=G-7E9MWZLQHL"></script>
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7E9MWZLQHL"></script>
 
-<!-- Add CodeMirror CSS and JavaScript -->
+<!-- Add CodeMirror CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.css">
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/html-hint.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/xml-hint.js"></script>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/anyword-hint.js"></script>
+
+<!-- Load CodeMirror core first -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+
+<!-- Load modes -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+
+<!-- Load addons -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/html-hint.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/xml-hint.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/anyword-hint.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closetag.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchbrackets.js"></script>
 
 <!-- Add Storage Utils -->
 <script type="module" src="./utils.js"></script>
@@ -104,7 +114,7 @@
 <script type="module" src="./payment.js"></script>
 
 <!-- Add Split.js -->
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
 
 <!-- Add Tailwind CSS -->
 <script src="https://cdn.tailwindcss.com"></script>
@@ -349,8 +359,136 @@ const defaultStuff = `<!DOCTYPE html>
 let editor;
 let previousContent = '';
 
+// Tailwind class suggestions
+const tailwindClasses = [
+    // Layout
+    'container', 'flex', 'grid', 'block', 'inline', 'inline-block', 'hidden', 'flow-root', 'contents', 'list-item', 'relative', 'absolute', 'fixed', 'sticky',
+    
+    // Basic Colors
+    'text-white', 'text-black', 'text-transparent', 'text-current',
+    'bg-white', 'bg-black', 'bg-transparent', 'bg-current',
+    'border-white', 'border-black', 'border-transparent', 'border-current',
+    
+    // Colors (with shades)
+    ...['slate', 'gray', 'zinc', 'neutral', 'stone', 'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose'].flatMap(color => [
+        `text-${color}-50`, `text-${color}-100`, `text-${color}-200`, `text-${color}-300`, `text-${color}-400`,
+        `text-${color}-500`, `text-${color}-600`, `text-${color}-700`, `text-${color}-800`, `text-${color}-900`, `text-${color}-950`,
+        `bg-${color}-50`, `bg-${color}-100`, `bg-${color}-200`, `bg-${color}-300`, `bg-${color}-400`,
+        `bg-${color}-500`, `bg-${color}-600`, `bg-${color}-700`, `bg-${color}-800`, `bg-${color}-900`, `bg-${color}-950`,
+        `border-${color}-50`, `border-${color}-100`, `border-${color}-200`, `border-${color}-300`, `border-${color}-400`,
+        `border-${color}-500`, `border-${color}-600`, `border-${color}-700`, `border-${color}-800`, `border-${color}-900`, `border-${color}-950`,
+    ]),
+    
+    // Flexbox
+    'flex-row', 'flex-row-reverse', 'flex-col', 'flex-col-reverse', 'flex-wrap', 'flex-wrap-reverse', 'flex-nowrap',
+    'flex-1', 'flex-auto', 'flex-initial', 'flex-none', 'flex-grow', 'flex-grow-0', 'flex-shrink', 'flex-shrink-0',
+    'justify-start', 'justify-end', 'justify-center', 'justify-between', 'justify-around', 'justify-evenly',
+    'items-start', 'items-end', 'items-center', 'items-baseline', 'items-stretch',
+    'self-auto', 'self-start', 'self-end', 'self-center', 'self-stretch', 'self-baseline',
+    
+    // Background Utilities
+    'bg-none', 'bg-gradient-to-t', 'bg-gradient-to-tr', 'bg-gradient-to-r', 'bg-gradient-to-br', 
+    'bg-gradient-to-b', 'bg-gradient-to-bl', 'bg-gradient-to-l', 'bg-gradient-to-tl',
+    'bg-clip-border', 'bg-clip-padding', 'bg-clip-content', 'bg-clip-text',
+    'bg-fixed', 'bg-local', 'bg-scroll',
+    'bg-center', 'bg-top', 'bg-right', 'bg-bottom', 'bg-left',
+    'bg-repeat', 'bg-no-repeat', 'bg-repeat-x', 'bg-repeat-y', 'bg-repeat-round', 'bg-repeat-space',
+    'bg-auto', 'bg-cover', 'bg-contain',
+    
+    // Text Decoration
+    'underline', 'overline', 'line-through', 'no-underline',
+    'decoration-solid', 'decoration-double', 'decoration-dotted', 'decoration-dashed', 'decoration-wavy',
+    'decoration-0', 'decoration-1', 'decoration-2', 'decoration-4', 'decoration-8',
+    'decoration-auto', 'decoration-from-font',
+    
+    // Text Transform
+    'uppercase', 'lowercase', 'capitalize', 'normal-case',
+    
+    // Text Overflow
+    'truncate', 'text-ellipsis', 'text-clip', 'break-normal', 'break-words', 'break-all',
+    
+    // Font Family
+    'font-sans', 'font-serif', 'font-mono',
+    
+    // Text Alignment
+    'text-left', 'text-center', 'text-right', 'text-justify', 'text-start', 'text-end',
+    
+    // Lists
+    'list-none', 'list-disc', 'list-decimal', 'list-inside', 'list-outside',
+    
+    // Placeholder Color
+    'placeholder-transparent', 'placeholder-current', 'placeholder-black', 'placeholder-white',
+    
+    // Grid
+    'grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4', 'grid-cols-5', 'grid-cols-6', 'grid-cols-12',
+    'grid-rows-1', 'grid-rows-2', 'grid-rows-3', 'grid-rows-4', 'grid-rows-5', 'grid-rows-6',
+    'gap-0', 'gap-1', 'gap-2', 'gap-3', 'gap-4', 'gap-5', 'gap-6', 'gap-8', 'gap-10', 'gap-12',
+    'col-span-1', 'col-span-2', 'col-span-3', 'col-span-4', 'col-span-5', 'col-span-6', 'col-span-12',
+    'row-span-1', 'row-span-2', 'row-span-3', 'row-span-4', 'row-span-5', 'row-span-6',
+    
+    // Spacing
+    'p-0', 'p-1', 'p-2', 'p-3', 'p-4', 'p-5', 'p-6', 'p-8', 'p-10', 'p-12', 'p-16', 'p-20',
+    'px-0', 'px-1', 'px-2', 'px-3', 'px-4', 'px-5', 'px-6', 'px-8', 'px-10', 'px-12', 'px-16', 'px-20',
+    'py-0', 'py-1', 'py-2', 'py-3', 'py-4', 'py-5', 'py-6', 'py-8', 'py-10', 'py-12', 'py-16', 'py-20',
+    'm-0', 'm-1', 'm-2', 'm-3', 'm-4', 'm-5', 'm-6', 'm-8', 'm-10', 'm-12', 'm-16', 'm-20',
+    'mx-0', 'mx-1', 'mx-2', 'mx-3', 'mx-4', 'mx-5', 'mx-6', 'mx-8', 'mx-10', 'mx-12', 'mx-16', 'mx-20', 'mx-auto',
+    'my-0', 'my-1', 'my-2', 'my-3', 'my-4', 'my-5', 'my-6', 'my-8', 'my-10', 'my-12', 'my-16', 'my-20',
+    'space-x-0', 'space-x-1', 'space-x-2', 'space-x-3', 'space-x-4', 'space-x-6', 'space-x-8', 'space-x-10', 'space-x-12',
+    'space-y-0', 'space-y-1', 'space-y-2', 'space-y-3', 'space-y-4', 'space-y-6', 'space-y-8', 'space-y-10', 'space-y-12',
+    
+    // Sizing
+    'w-0', 'w-1', 'w-2', 'w-3', 'w-4', 'w-5', 'w-6', 'w-8', 'w-10', 'w-12', 'w-16', 'w-20', 'w-24', 'w-32', 'w-40', 'w-48', 'w-56', 'w-64',
+    'w-auto', 'w-full', 'w-screen', 'w-min', 'w-max', 'w-fit', 'w-1/2', 'w-1/3', 'w-2/3', 'w-1/4', 'w-3/4',
+    'h-0', 'h-1', 'h-2', 'h-3', 'h-4', 'h-5', 'h-6', 'h-8', 'h-10', 'h-12', 'h-16', 'h-20', 'h-24', 'h-32', 'h-40', 'h-48', 'h-56', 'h-64',
+    'h-auto', 'h-full', 'h-screen', 'h-min', 'h-max', 'h-fit',
+    
+    // Typography
+    'text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl', 'text-5xl', 'text-6xl', 'text-7xl', 'text-8xl', 'text-9xl',
+    'font-thin', 'font-extralight', 'font-light', 'font-normal', 'font-medium', 'font-semibold', 'font-bold', 'font-extrabold', 'font-black',
+    'tracking-tighter', 'tracking-tight', 'tracking-normal', 'tracking-wide', 'tracking-wider', 'tracking-widest',
+    'leading-3', 'leading-4', 'leading-5', 'leading-6', 'leading-7', 'leading-8', 'leading-9', 'leading-10',
+    
+    // Borders
+    'border', 'border-0', 'border-2', 'border-4', 'border-8', 'border-x', 'border-y', 'border-t', 'border-r', 'border-b', 'border-l',
+    'rounded-none', 'rounded-sm', 'rounded', 'rounded-md', 'rounded-lg', 'rounded-xl', 'rounded-2xl', 'rounded-3xl', 'rounded-full',
+    'border-solid', 'border-dashed', 'border-dotted', 'border-double', 'border-hidden', 'border-none',
+    
+    // Effects
+    'shadow-sm', 'shadow', 'shadow-md', 'shadow-lg', 'shadow-xl', 'shadow-2xl', 'shadow-inner', 'shadow-none',
+    'opacity-0', 'opacity-5', 'opacity-10', 'opacity-20', 'opacity-25', 'opacity-30', 'opacity-40', 'opacity-50',
+    'opacity-60', 'opacity-70', 'opacity-75', 'opacity-80', 'opacity-90', 'opacity-95', 'opacity-100',
+    'blur-none', 'blur-sm', 'blur', 'blur-md', 'blur-lg', 'blur-xl', 'blur-2xl', 'blur-3xl',
+    
+    // Transitions & Animation
+    'transition', 'transition-all', 'transition-colors', 'transition-opacity', 'transition-shadow', 'transition-transform',
+    'duration-75', 'duration-100', 'duration-150', 'duration-200', 'duration-300', 'duration-500', 'duration-700', 'duration-1000',
+    'ease-linear', 'ease-in', 'ease-out', 'ease-in-out',
+    'animate-none', 'animate-spin', 'animate-ping', 'animate-pulse', 'animate-bounce',
+    
+    // Transforms
+    'scale-0', 'scale-50', 'scale-75', 'scale-90', 'scale-95', 'scale-100', 'scale-105', 'scale-110', 'scale-125', 'scale-150',
+    'rotate-0', 'rotate-45', 'rotate-90', 'rotate-180', '-rotate-45', '-rotate-90', '-rotate-180',
+    'translate-x-0', 'translate-x-1', 'translate-x-2', 'translate-x-4', 'translate-x-8', '-translate-x-1', '-translate-x-2',
+    'translate-y-0', 'translate-y-1', 'translate-y-2', 'translate-y-4', 'translate-y-8', '-translate-y-1', '-translate-y-2',
+    
+    // Interactivity
+    'cursor-auto', 'cursor-default', 'cursor-pointer', 'cursor-wait', 'cursor-text', 'cursor-move', 'cursor-help', 'cursor-not-allowed',
+    'select-none', 'select-text', 'select-all', 'select-auto',
+    'resize-none', 'resize-y', 'resize-x', 'resize',
+    
+    // Filters
+    'grayscale-0', 'grayscale', 'invert-0', 'invert', 'sepia-0', 'sepia',
+    'brightness-0', 'brightness-50', 'brightness-75', 'brightness-90', 'brightness-100', 'brightness-105', 'brightness-110', 'brightness-125', 'brightness-150', 'brightness-200',
+    
+    // State Variants
+    'hover:', 'focus:', 'active:', 'disabled:', 'visited:', 'checked:', 'first:', 'last:', 'odd:', 'even:', 'group-hover:', 'group-focus:', 'focus-within:', 'focus-visible:', 'motion-safe:', 'motion-reduce:', 'dark:',
+    
+    // Responsive Variants
+    'sm:', 'md:', 'lg:', 'xl:', '2xl:'
+];
+
 // Initialize editor
-async function init() {
+function init() {
     let initialContent = defaultStuff;
     const hash = window.location.hash;
 
@@ -364,143 +502,19 @@ async function init() {
                 console.error('Error loading shared code:', error);
             }
         } else if (hash.startsWith('#')) {
-            // Remove the # from the start of the hash
             const gistUrl = hash.substring(1);
-            const content = await loadGistContent(gistUrl);
-            if (content) initialContent = content;
+            loadGistContent(gistUrl).then(content => {
+                if (content) {
+                    editor.setValue(content);
+                    debouncedPreviewUpdate();
+                }
+            });
         }
     } else {
-        initialContent = storage.load();
+        initialContent = storage.load(STORAGE_KEYS.TAILWIND_EDITOR, defaultStuff);
     }
 
-    // Expanded Tailwind class suggestions
-    const tailwindClasses = [
-        // Layout
-        'container', 'flex', 'grid', 'block', 'inline', 'inline-block', 'hidden', 'flow-root', 'contents', 'list-item', 'relative', 'absolute', 'fixed', 'sticky',
-        
-        // Basic Colors
-        'text-white', 'text-black', 'text-transparent', 'text-current',
-        'bg-white', 'bg-black', 'bg-transparent', 'bg-current',
-        'border-white', 'border-black', 'border-transparent', 'border-current',
-        
-        // Colors (with shades)
-        ...['slate', 'gray', 'zinc', 'neutral', 'stone', 'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose'].flatMap(color => [
-            `text-${color}-50`, `text-${color}-100`, `text-${color}-200`, `text-${color}-300`, `text-${color}-400`,
-            `text-${color}-500`, `text-${color}-600`, `text-${color}-700`, `text-${color}-800`, `text-${color}-900`, `text-${color}-950`,
-            `bg-${color}-50`, `bg-${color}-100`, `bg-${color}-200`, `bg-${color}-300`, `bg-${color}-400`,
-            `bg-${color}-500`, `bg-${color}-600`, `bg-${color}-700`, `bg-${color}-800`, `bg-${color}-900`, `bg-${color}-950`,
-            `border-${color}-50`, `border-${color}-100`, `border-${color}-200`, `border-${color}-300`, `border-${color}-400`,
-            `border-${color}-500`, `border-${color}-600`, `border-${color}-700`, `border-${color}-800`, `border-${color}-900`, `border-${color}-950`,
-        ]),
-        
-        // Flexbox
-        'flex-row', 'flex-row-reverse', 'flex-col', 'flex-col-reverse', 'flex-wrap', 'flex-wrap-reverse', 'flex-nowrap',
-        'flex-1', 'flex-auto', 'flex-initial', 'flex-none', 'flex-grow', 'flex-grow-0', 'flex-shrink', 'flex-shrink-0',
-        'justify-start', 'justify-end', 'justify-center', 'justify-between', 'justify-around', 'justify-evenly',
-        'items-start', 'items-end', 'items-center', 'items-baseline', 'items-stretch',
-        'self-auto', 'self-start', 'self-end', 'self-center', 'self-stretch', 'self-baseline',
-        
-        // Background Utilities
-        'bg-none', 'bg-gradient-to-t', 'bg-gradient-to-tr', 'bg-gradient-to-r', 'bg-gradient-to-br', 
-        'bg-gradient-to-b', 'bg-gradient-to-bl', 'bg-gradient-to-l', 'bg-gradient-to-tl',
-        'bg-clip-border', 'bg-clip-padding', 'bg-clip-content', 'bg-clip-text',
-        'bg-fixed', 'bg-local', 'bg-scroll',
-        'bg-center', 'bg-top', 'bg-right', 'bg-bottom', 'bg-left',
-        'bg-repeat', 'bg-no-repeat', 'bg-repeat-x', 'bg-repeat-y', 'bg-repeat-round', 'bg-repeat-space',
-        'bg-auto', 'bg-cover', 'bg-contain',
-        
-        // Text Decoration
-        'underline', 'overline', 'line-through', 'no-underline',
-        'decoration-solid', 'decoration-double', 'decoration-dotted', 'decoration-dashed', 'decoration-wavy',
-        'decoration-0', 'decoration-1', 'decoration-2', 'decoration-4', 'decoration-8',
-        'decoration-auto', 'decoration-from-font',
-        
-        // Text Transform
-        'uppercase', 'lowercase', 'capitalize', 'normal-case',
-        
-        // Text Overflow
-        'truncate', 'text-ellipsis', 'text-clip', 'break-normal', 'break-words', 'break-all',
-        
-        // Font Family
-        'font-sans', 'font-serif', 'font-mono',
-        
-        // Text Alignment
-        'text-left', 'text-center', 'text-right', 'text-justify', 'text-start', 'text-end',
-        
-        // Lists
-        'list-none', 'list-disc', 'list-decimal', 'list-inside', 'list-outside',
-        
-        // Placeholder Color
-        'placeholder-transparent', 'placeholder-current', 'placeholder-black', 'placeholder-white',
-        
-        // Grid
-        'grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4', 'grid-cols-5', 'grid-cols-6', 'grid-cols-12',
-        'grid-rows-1', 'grid-rows-2', 'grid-rows-3', 'grid-rows-4', 'grid-rows-5', 'grid-rows-6',
-        'gap-0', 'gap-1', 'gap-2', 'gap-3', 'gap-4', 'gap-5', 'gap-6', 'gap-8', 'gap-10', 'gap-12',
-        'col-span-1', 'col-span-2', 'col-span-3', 'col-span-4', 'col-span-5', 'col-span-6', 'col-span-12',
-        'row-span-1', 'row-span-2', 'row-span-3', 'row-span-4', 'row-span-5', 'row-span-6',
-        
-        // Spacing
-        'p-0', 'p-1', 'p-2', 'p-3', 'p-4', 'p-5', 'p-6', 'p-8', 'p-10', 'p-12', 'p-16', 'p-20',
-        'px-0', 'px-1', 'px-2', 'px-3', 'px-4', 'px-5', 'px-6', 'px-8', 'px-10', 'px-12', 'px-16', 'px-20',
-        'py-0', 'py-1', 'py-2', 'py-3', 'py-4', 'py-5', 'py-6', 'py-8', 'py-10', 'py-12', 'py-16', 'py-20',
-        'm-0', 'm-1', 'm-2', 'm-3', 'm-4', 'm-5', 'm-6', 'm-8', 'm-10', 'm-12', 'm-16', 'm-20',
-        'mx-0', 'mx-1', 'mx-2', 'mx-3', 'mx-4', 'mx-5', 'mx-6', 'mx-8', 'mx-10', 'mx-12', 'mx-16', 'mx-20', 'mx-auto',
-        'my-0', 'my-1', 'my-2', 'my-3', 'my-4', 'my-5', 'my-6', 'my-8', 'my-10', 'my-12', 'my-16', 'my-20',
-        'space-x-0', 'space-x-1', 'space-x-2', 'space-x-3', 'space-x-4', 'space-x-6', 'space-x-8', 'space-x-10', 'space-x-12',
-        'space-y-0', 'space-y-1', 'space-y-2', 'space-y-3', 'space-y-4', 'space-y-6', 'space-y-8', 'space-y-10', 'space-y-12',
-        
-        // Sizing
-        'w-0', 'w-1', 'w-2', 'w-3', 'w-4', 'w-5', 'w-6', 'w-8', 'w-10', 'w-12', 'w-16', 'w-20', 'w-24', 'w-32', 'w-40', 'w-48', 'w-56', 'w-64',
-        'w-auto', 'w-full', 'w-screen', 'w-min', 'w-max', 'w-fit', 'w-1/2', 'w-1/3', 'w-2/3', 'w-1/4', 'w-3/4',
-        'h-0', 'h-1', 'h-2', 'h-3', 'h-4', 'h-5', 'h-6', 'h-8', 'h-10', 'h-12', 'h-16', 'h-20', 'h-24', 'h-32', 'h-40', 'h-48', 'h-56', 'h-64',
-        'h-auto', 'h-full', 'h-screen', 'h-min', 'h-max', 'h-fit',
-        
-        // Typography
-        'text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl', 'text-5xl', 'text-6xl', 'text-7xl', 'text-8xl', 'text-9xl',
-        'font-thin', 'font-extralight', 'font-light', 'font-normal', 'font-medium', 'font-semibold', 'font-bold', 'font-extrabold', 'font-black',
-        'tracking-tighter', 'tracking-tight', 'tracking-normal', 'tracking-wide', 'tracking-wider', 'tracking-widest',
-        'leading-3', 'leading-4', 'leading-5', 'leading-6', 'leading-7', 'leading-8', 'leading-9', 'leading-10',
-        
-        // Borders
-        'border', 'border-0', 'border-2', 'border-4', 'border-8', 'border-x', 'border-y', 'border-t', 'border-r', 'border-b', 'border-l',
-        'rounded-none', 'rounded-sm', 'rounded', 'rounded-md', 'rounded-lg', 'rounded-xl', 'rounded-2xl', 'rounded-3xl', 'rounded-full',
-        'border-solid', 'border-dashed', 'border-dotted', 'border-double', 'border-hidden', 'border-none',
-        
-        // Effects
-        'shadow-sm', 'shadow', 'shadow-md', 'shadow-lg', 'shadow-xl', 'shadow-2xl', 'shadow-inner', 'shadow-none',
-        'opacity-0', 'opacity-5', 'opacity-10', 'opacity-20', 'opacity-25', 'opacity-30', 'opacity-40', 'opacity-50',
-        'opacity-60', 'opacity-70', 'opacity-75', 'opacity-80', 'opacity-90', 'opacity-95', 'opacity-100',
-        'blur-none', 'blur-sm', 'blur', 'blur-md', 'blur-lg', 'blur-xl', 'blur-2xl', 'blur-3xl',
-        
-        // Transitions & Animation
-        'transition', 'transition-all', 'transition-colors', 'transition-opacity', 'transition-shadow', 'transition-transform',
-        'duration-75', 'duration-100', 'duration-150', 'duration-200', 'duration-300', 'duration-500', 'duration-700', 'duration-1000',
-        'ease-linear', 'ease-in', 'ease-out', 'ease-in-out',
-        'animate-none', 'animate-spin', 'animate-ping', 'animate-pulse', 'animate-bounce',
-        
-        // Transforms
-        'scale-0', 'scale-50', 'scale-75', 'scale-90', 'scale-95', 'scale-100', 'scale-105', 'scale-110', 'scale-125', 'scale-150',
-        'rotate-0', 'rotate-45', 'rotate-90', 'rotate-180', '-rotate-45', '-rotate-90', '-rotate-180',
-        'translate-x-0', 'translate-x-1', 'translate-x-2', 'translate-x-4', 'translate-x-8', '-translate-x-1', '-translate-x-2',
-        'translate-y-0', 'translate-y-1', 'translate-y-2', 'translate-y-4', 'translate-y-8', '-translate-y-1', '-translate-y-2',
-        
-        // Interactivity
-        'cursor-auto', 'cursor-default', 'cursor-pointer', 'cursor-wait', 'cursor-text', 'cursor-move', 'cursor-help', 'cursor-not-allowed',
-        'select-none', 'select-text', 'select-all', 'select-auto',
-        'resize-none', 'resize-y', 'resize-x', 'resize',
-        
-        // Filters
-        'grayscale-0', 'grayscale', 'invert-0', 'invert', 'sepia-0', 'sepia',
-        'brightness-0', 'brightness-50', 'brightness-75', 'brightness-90', 'brightness-100', 'brightness-105', 'brightness-110', 'brightness-125', 'brightness-150', 'brightness-200',
-        
-        // State Variants
-        'hover:', 'focus:', 'active:', 'disabled:', 'visited:', 'checked:', 'first:', 'last:', 'odd:', 'even:', 'group-hover:', 'group-focus:', 'focus-within:', 'focus-visible:', 'motion-safe:', 'motion-reduce:', 'dark:',
-        
-        // Responsive Variants
-        'sm:', 'md:', 'lg:', 'xl:', '2xl:'
-    ];
-
+    // Initialize CodeMirror with all options at once
     editor = CodeMirror(document.querySelector('#editor'), {
         value: initialContent,
         mode: 'htmlmixed',
@@ -509,9 +523,9 @@ async function init() {
         autoCloseTags: true,
         autoCloseBrackets: true,
         matchBrackets: true,
+        lineWrapping: true,
         indentUnit: 2,
         tabSize: 2,
-        lineWrapping: true,
         viewportMargin: Infinity,
         hintOptions: {
             completeSingle: false,
@@ -553,7 +567,7 @@ async function init() {
         }
     });
 
-    // Add auto-suggestions on typing
+    // Add event listeners
     editor.on('keyup', function(cm, event) {
         if (!/^[a-zA-Z0-9-]$/.test(event.key)) return;
         
@@ -566,43 +580,16 @@ async function init() {
         }
     });
 
-    // Add auto-save functionality
     editor.on('change', (cm) => {
         debouncedPreviewUpdate();
-        // Save to localStorage
         const content = cm.getValue();
-        storage.save(content);
+        storage.save(STORAGE_KEYS.TAILWIND_EDITOR, content, defaultStuff);
     });
     
     editor.focus();
     editor.execCommand('selectAll');
     
     debouncedPreviewUpdate();
-
-    // Add custom styles for suggestions
-    const style = document.createElement('style');
-    style.textContent = `
-        .CodeMirror-hints {
-            background: #282a36;
-            border: 1px solid #44475a;
-            border-radius: 4px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        }
-        .CodeMirror-hint {
-            color: #f8f8f2;
-            padding: 4px 8px;
-            border-radius: 2px;
-            margin: 0;
-        }
-        .CodeMirror-hint-active {
-            background: #44475a;
-        }
-        .hint-item {
-            font-family: monospace;
-            font-size: 13px;
-        }
-    `;
-    document.head.appendChild(style);
 }
 
 // Gist loading function
@@ -771,8 +758,9 @@ const debouncedPreviewUpdate = debounce(() => {
     iframe.srcdoc = html;
 }, 150);
 
-// Move window.onload inside module
+// Move window.onload inside module and ensure CodeMirror is loaded
 window.addEventListener('load', function() {
+    // Initialize Split.js first
     Split(['#left-panel', '#right-panel'], {
         sizes: [50, 50],
         minSize: [200, 200],
@@ -785,8 +773,10 @@ window.addEventListener('load', function() {
         gutterStyle: (dimension, gutterSize) => ({
             'flex-basis': `${gutterSize}px`,
         }),
-        onDrag: () => editor.refresh()
+        onDrag: () => editor?.refresh()
     });
+
+    // Initialize editor
     init();
 });
 </script>
