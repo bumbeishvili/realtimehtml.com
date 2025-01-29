@@ -94,6 +94,15 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/xml-hint.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/anyword-hint.js"></script>
 
+<!-- Add Storage Utils -->
+<script type="module" src="./utils.js"></script>
+
+<!-- Add Stripe -->
+<script src="https://js.stripe.com/v3/"></script>
+
+<!-- Add Payment Integration -->
+<script type="module" src="./payment.js"></script>
+
 <!-- Add Split.js -->
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
 
@@ -298,7 +307,23 @@
   gtag('config', 'G-7E9MWZLQHL');
 </script>
 
-<script type="text/javascript">
+<script type="module">
+import { storage, STORAGE_KEYS } from './utils.js';
+
+// Modal functions
+const modal = {
+    show() {
+        document.getElementById('shareModal').classList.add('show');
+    },
+    
+    hide() {
+        document.getElementById('shareModal').classList.remove('show');
+    }
+};
+
+// Make modal functions globally available
+window.modal = modal;
+
 const defaultStuff = `<!DOCTYPE html>
 <html>
 <head>
@@ -320,225 +345,9 @@ const defaultStuff = `<!DOCTYPE html>
     </div>
 </body>
 </html>`;
-const STORAGE_KEY = 'tailwindcss_editor_code';
+
 let editor;
 let previousContent = '';
-
-// Local Storage functions
-const storage = {
-    save(content) {
-        try {
-            // If content is empty, save the default content instead
-            const contentToSave = content || defaultStuff;
-            localStorage.setItem(STORAGE_KEY, contentToSave);
-            return true;
-        } catch (error) {
-            console.error('Error saving to localStorage:', error);
-            // Try clearing some space in localStorage if it's full
-            try {
-                // Remove old items if storage is full
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key !== STORAGE_KEY) {
-                        localStorage.removeItem(key);
-                    }
-                }
-                // Try saving again
-                localStorage.setItem(STORAGE_KEY, contentToSave);
-                return true;
-            } catch (retryError) {
-                console.error('Failed to save even after cleanup:', retryError);
-                return false;
-            }
-        }
-    },
-    
-    load() {
-        try {
-            return localStorage.getItem(STORAGE_KEY) || defaultStuff;
-        } catch (error) {
-            console.error('Error loading from localStorage:', error);
-            return defaultStuff;
-        }
-    }
-};
-
-// Modal functions
-const modal = {
-    show() {
-        document.getElementById('shareModal').classList.add('show');
-    },
-    
-    hide() {
-        document.getElementById('shareModal').classList.remove('show');
-    }
-};
-
-// Gist loading function
-async function loadGistContent(url) {
-    try {
-        // Convert github.com URLs to raw content URLs
-        if (url.includes('github.com/gist/') || url.includes('gist.github.com/')) {
-            // If it's not already a raw URL, convert it
-            if (!url.includes('raw.githubusercontent.com') && !url.includes('/raw/')) {
-                // Handle both full and shortened URLs
-                url = url.replace('gist.github.com/', 'gist.githubusercontent.com/')
-                         .replace('github.com/gist/', 'gist.githubusercontent.com/')
-                         .replace('/blob/', '/raw/');
-                
-                // If URL doesn't end with /raw, add it
-                if (!url.endsWith('/raw')) {
-                    url = url + '/raw';
-                }
-            }
-        }
-
-        const response = await fetch(url);
-        if (!response.ok) throw new Error('Failed to fetch Gist');
-        return await response.text();
-    } catch (error) {
-        console.error('Error loading gist:', error);
-        return null;
-    }
-}
-
-// Clipboard functions
-const clipboard = {
-    async copy(text) {
-        if (navigator.clipboard && window.isSecureContext) {
-            return navigator.clipboard.writeText(text);
-        }
-        
-        // Fallback for browsers without clipboard API
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        
-        try {
-            document.execCommand('copy');
-            return Promise.resolve();
-        } catch (err) {
-            console.error('Failed to copy URL:', err);
-            return Promise.reject(err);
-        } finally {
-            document.body.removeChild(textarea);
-        }
-    }
-};
-
-// Share functionality
-async function shareCode() {
-    const content = editor.getValue();
-    try {
-        const encoded = btoa(unescape(encodeURIComponent(content)));
-        const baseUrl = window.location.href.split('#')[0];  // Get full URL path without hash
-        const shareUrl = `${baseUrl}#code=${encoded}`;
-        
-        await clipboard.copy(shareUrl);
-        const button = document.getElementById('compressedButton');
-        button.textContent = 'Copied!';
-        
-        setTimeout(() => {
-            button.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/></svg>Copy compressed URL';
-        }, 2000);
-    } catch (error) {
-        console.error('Error sharing code:', error);
-        alert('Could not automatically copy the URL. Here it is to copy manually:\n\n' + shareUrl);
-    }
-}
-
-// Debounce function
-function debounce(func, wait) {
-    let timeout;
-    return function executedFunction(...args) {
-        const later = () => {
-            clearTimeout(timeout);
-            func(...args);
-        };
-        clearTimeout(timeout);
-        timeout = setTimeout(later, wait);
-    };
-}
-
-// Preview update function
-const debouncedPreviewUpdate = debounce(() => {
-    const newContent = editor.getValue();
-    if (previousContent === newContent) return;
-    
-    previousContent = newContent;
-    const rightPanel = document.querySelector('#right-panel');
-    const iframe = document.querySelector('#preview') || document.createElement('iframe');
-    
-    if (!iframe.id) {
-        iframe.id = 'preview';
-        iframe.style.cssText = 'width: 100%; height: 100%; border: none;';
-        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-modals allow-forms allow-popups');
-        rightPanel.appendChild(iframe);
-    }
-    
-    // Process the content to add loop protection and ensure Tailwind is included
-    const processedContent = newContent.replace(/\b(for|while)\b\s*\(/g, (match, keyword, offset) => {
-        const lineNumber = newContent.substr(0, offset).split('\n').length;
-        return `${match}loopProtect(${lineNumber}),`;
-    });
-
-    // Create the protected HTML content with Tailwind
-    const html = [
-        '<!DOCTYPE html>',
-        '<html>',
-        '<head>',
-        '    <meta charset="utf-8">',
-        '    <script src="https://cdn.tailwindcss.com"><\/script>',
-        '    <script>',
-        '        // Loop protection',
-        '        window.__loopProtect = true;',
-        '        window.__loopProtectTimeout = 500;',
-        '        let __loopCount = {};',
-        '',
-        '        // Override setTimeout and setInterval',
-        '        const originalSetTimeout = setTimeout;',
-        '        const originalSetInterval = setInterval;',
-        '',
-        '        window.setTimeout = function(fn, delay) {',
-        '            if (delay < 10) delay = 10;',
-        '            return originalSetTimeout.call(this, fn, delay);',
-        '        };',
-        '',
-        '        window.setInterval = function(fn, delay) {',
-        '            if (delay < 10) delay = 10;',
-        '            return originalSetInterval.call(this, fn, delay);',
-        '        };',
-        '',
-        '        function loopProtect(line) {',
-        '            if (!window.__loopProtect) return;',
-        '            const key = "loop" + line;',
-        '            __loopCount[key] = (__loopCount[key] || 0) + 1;',
-        '',
-        '            if (__loopCount[key] > 1000000) {',
-        '                const msg = "Potential infinite loop detected on line " + line;',
-        '                console.error(msg);',
-        '                document.body.innerHTML = \'<div style="color: red; font-family: monospace; padding: 20px;">\' + msg + "</div>";',
-        '                throw new Error(msg);',
-        '            }',
-        '',
-        '            if (__loopCount[key] === 1) {',
-        '                setTimeout(() => { __loopCount[key] = 0; }, window.__loopProtectTimeout);',
-        '            }',
-        '            return true;',
-        '        }',
-        '    <\/script>',
-        '</head>',
-        '<body>',
-        processedContent,
-        '</body>',
-        '</html>'
-    ].join('\n');
-    
-    iframe.srcdoc = html;
-}, 150);
 
 // Initialize editor
 async function init() {
@@ -795,6 +604,191 @@ async function init() {
     `;
     document.head.appendChild(style);
 }
+
+// Gist loading function
+async function loadGistContent(url) {
+    try {
+        // Convert github.com URLs to raw content URLs
+        if (url.includes('github.com/gist/') || url.includes('gist.github.com/')) {
+            // If it's not already a raw URL, convert it
+            if (!url.includes('raw.githubusercontent.com') && !url.includes('/raw/')) {
+                // Handle both full and shortened URLs
+                url = url.replace('gist.github.com/', 'gist.githubusercontent.com/')
+                         .replace('github.com/gist/', 'gist.githubusercontent.com/')
+                         .replace('/blob/', '/raw/');
+                
+                // If URL doesn't end with /raw, add it
+                if (!url.endsWith('/raw')) {
+                    url = url + '/raw';
+                }
+            }
+        }
+
+        const response = await fetch(url);
+        if (!response.ok) throw new Error('Failed to fetch Gist');
+        return await response.text();
+    } catch (error) {
+        console.error('Error loading gist:', error);
+        return null;
+    }
+}
+
+// Clipboard functions
+const clipboard = {
+    async copy(text) {
+        if (navigator.clipboard && window.isSecureContext) {
+            return navigator.clipboard.writeText(text);
+        }
+        
+        // Fallback for browsers without clipboard API
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        textarea.style.position = 'fixed';
+        textarea.style.opacity = '0';
+        document.body.appendChild(textarea);
+        textarea.select();
+        
+        try {
+            document.execCommand('copy');
+            return Promise.resolve();
+        } catch (err) {
+            console.error('Failed to copy URL:', err);
+            return Promise.reject(err);
+        } finally {
+            document.body.removeChild(textarea);
+        }
+    }
+};
+
+// Share functionality
+async function shareCode() {
+    const content = editor.getValue();
+    try {
+        const encoded = btoa(unescape(encodeURIComponent(content)));
+        const baseUrl = window.location.href.split('#')[0];  // Get full URL path without hash
+        const shareUrl = `${baseUrl}#code=${encoded}`;
+        
+        await clipboard.copy(shareUrl);
+        const button = document.getElementById('compressedButton');
+        button.textContent = 'Copied!';
+        
+        setTimeout(() => {
+            button.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/></svg>Copy compressed URL';
+        }, 2000);
+    } catch (error) {
+        console.error('Error sharing code:', error);
+        alert('Could not automatically copy the URL. Here it is to copy manually:\n\n' + shareUrl);
+    }
+}
+
+// Debounce function
+function debounce(func, wait) {
+    let timeout;
+    return function executedFunction(...args) {
+        const later = () => {
+            clearTimeout(timeout);
+            func(...args);
+        };
+        clearTimeout(timeout);
+        timeout = setTimeout(later, wait);
+    };
+}
+
+// Preview update function
+const debouncedPreviewUpdate = debounce(() => {
+    const newContent = editor.getValue();
+    if (previousContent === newContent) return;
+    
+    previousContent = newContent;
+    const rightPanel = document.querySelector('#right-panel');
+    const iframe = document.querySelector('#preview') || document.createElement('iframe');
+    
+    if (!iframe.id) {
+        iframe.id = 'preview';
+        iframe.style.cssText = 'width: 100%; height: 100%; border: none;';
+        iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-modals allow-forms allow-popups');
+        rightPanel.appendChild(iframe);
+    }
+    
+    // Process the content to add loop protection and ensure Tailwind is included
+    const processedContent = newContent.replace(/\b(for|while)\b\s*\(/g, (match, keyword, offset) => {
+        const lineNumber = newContent.substr(0, offset).split('\n').length;
+        return `${match}loopProtect(${lineNumber}),`;
+    });
+
+    // Create the protected HTML content with Tailwind
+    const html = [
+        '<!DOCTYPE html>',
+        '<html>',
+        '<head>',
+        '    <meta charset="utf-8">',
+        '    <script src="https://cdn.tailwindcss.com"><\/script>',
+        '    <script>',
+        '        // Loop protection',
+        '        window.__loopProtect = true;',
+        '        window.__loopProtectTimeout = 500;',
+        '        let __loopCount = {};',
+        '',
+        '        // Override setTimeout and setInterval',
+        '        const originalSetTimeout = setTimeout;',
+        '        const originalSetInterval = setInterval;',
+        '',
+        '        window.setTimeout = function(fn, delay) {',
+        '            if (delay < 10) delay = 10;',
+        '            return originalSetTimeout.call(this, fn, delay);',
+        '        };',
+        '',
+        '        window.setInterval = function(fn, delay) {',
+        '            if (delay < 10) delay = 10;',
+        '            return originalSetInterval.call(this, fn, delay);',
+        '        };',
+        '',
+        '        function loopProtect(line) {',
+        '            if (!window.__loopProtect) return;',
+        '            const key = "loop" + line;',
+        '            __loopCount[key] = (__loopCount[key] || 0) + 1;',
+        '',
+        '            if (__loopCount[key] > 1000000) {',
+        '                const msg = "Potential infinite loop detected on line " + line;',
+        '                console.error(msg);',
+        '                document.body.innerHTML = \'<div style="color: red; font-family: monospace; padding: 20px;">\' + msg + "</div>";',
+        '                throw new Error(msg);',
+        '            }',
+        '',
+        '            if (__loopCount[key] === 1) {',
+        '                setTimeout(() => { __loopCount[key] = 0; }, window.__loopProtectTimeout);',
+        '            }',
+        '            return true;',
+        '        }',
+        '    <\/script>',
+        '</head>',
+        '<body>',
+        processedContent,
+        '</body>',
+        '</html>'
+    ].join('\n');
+    
+    iframe.srcdoc = html;
+}, 150);
+
+// Move window.onload inside module
+window.addEventListener('load', function() {
+    Split(['#left-panel', '#right-panel'], {
+        sizes: [50, 50],
+        minSize: [200, 200],
+        gutterSize: 10,
+        dragInterval: 1,
+        snapOffset: 0,
+        elementStyle: (dimension, size, gutterSize) => ({
+            'flex-basis': `calc(${size}% - ${gutterSize}px)`,
+        }),
+        gutterStyle: (dimension, gutterSize) => ({
+            'flex-basis': `${gutterSize}px`,
+        }),
+        onDrag: () => editor.refresh()
+    });
+    init();
+});
 </script>
 </head>
 <body style="margin: 0; padding: 0; overflow: hidden;">
@@ -845,24 +839,5 @@ async function init() {
             <iframe id="preview" sandbox="allow-scripts allow-same-origin allow-modals allow-forms allow-popups" style="width: 100%; height: 100%; border: none;"></iframe>
         </div>
     </div>
-    <script>
-        window.onload = function() {
-            Split(['#left-panel', '#right-panel'], {
-                sizes: [50, 50],
-                minSize: [200, 200],
-                gutterSize: 10,
-                dragInterval: 1,
-                snapOffset: 0,
-                elementStyle: (dimension, size, gutterSize) => ({
-                    'flex-basis': `calc(${size}% - ${gutterSize}px)`,
-                }),
-                gutterStyle: (dimension, gutterSize) => ({
-                    'flex-basis': `${gutterSize}px`,
-                }),
-                onDrag: () => editor.refresh()
-            });
-            init();
-        };
-    </script>
 </body>
 </html>

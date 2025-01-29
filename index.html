@@ -79,6 +79,15 @@
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
 
+<!-- Add Storage Utils -->
+<script type="module" src="./utils.js"></script>
+
+<!-- Add Stripe -->
+<script src="https://js.stripe.com/v3/"></script>
+
+<!-- Add Payment Integration -->
+<script type="module" src="./payment.js"></script>
+
 <!-- Add Split.js -->
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
 
@@ -280,7 +289,23 @@
   gtag('config', 'G-7E9MWZLQHL');
 </script>
 
-<script type="text/javascript">
+<script type="module">
+import { storage, STORAGE_KEYS } from './utils.js';
+
+// Modal functions
+const modal = {
+    show() {
+        document.getElementById('shareModal').classList.add('show');
+    },
+    
+    hide() {
+        document.getElementById('shareModal').classList.remove('show');
+    }
+};
+
+// Make modal functions globally available
+window.modal = modal;
+
 const defaultStuff = `<html>
  <head></head>
 <body>
@@ -293,59 +318,60 @@ const defaultStuff = `<html>
 
 </body>
 <html>`;
-const STORAGE_KEY = 'realtimehtml_code';
+
 let editor;
 let previousContent = '';
 
-// Local Storage functions
-const storage = {
-    save(content) {
-        try {
-            // If content is empty, save the default content instead
-            const contentToSave = content || defaultStuff;
-            localStorage.setItem(STORAGE_KEY, contentToSave);
-            return true;
-        } catch (error) {
-            console.error('Error saving to localStorage:', error);
-            // Try clearing some space in localStorage if it's full
-            try {
-                // Remove old items if storage is full
-                for (let i = 0; i < localStorage.length; i++) {
-                    const key = localStorage.key(i);
-                    if (key !== STORAGE_KEY) {
-                        localStorage.removeItem(key);
-                    }
-                }
-                // Try saving again
-                localStorage.setItem(STORAGE_KEY, contentToSave);
-                return true;
-            } catch (retryError) {
-                console.error('Failed to save even after cleanup:', retryError);
-                return false;
-            }
-        }
-    },
-    
-    load() {
-        try {
-            return localStorage.getItem(STORAGE_KEY) || defaultStuff;
-        } catch (error) {
-            console.error('Error loading from localStorage:', error);
-            return defaultStuff;
-        }
-    }
-};
+// Initialize editor
+async function init() {
+    let initialContent = defaultStuff;
+    const hash = window.location.hash;
 
-// Modal functions
-const modal = {
-    show() {
-        document.getElementById('shareModal').classList.add('show');
-    },
-    
-    hide() {
-        document.getElementById('shareModal').classList.remove('show');
+    if (hash) {
+        if (hash.startsWith('#code=')) {
+            try {
+                const encoded = hash.substring(6);
+                const content = decodeURIComponent(escape(atob(encoded)));
+                if (content) initialContent = content;
+            } catch (error) {
+                console.error('Error loading shared code:', error);
+            }
+        } else if (hash.startsWith('#@') || hash.startsWith('#http')) {
+            const gistUrl = hash.startsWith('#@') ? hash.substring(2) : hash.substring(1);
+            const content = await loadGistContent(gistUrl);
+            if (content) initialContent = content;
+        }
+    } else {
+        initialContent = storage.load(STORAGE_KEYS.REALTIME_HTML, defaultStuff);
     }
-};
+
+    editor = CodeMirror(document.querySelector('#editor'), {
+        value: initialContent,
+        mode: 'htmlmixed',
+        theme: 'dracula',
+        lineNumbers: true,
+        autoCloseTags: true,
+        autoCloseBrackets: true,
+        matchBrackets: true,
+        indentUnit: 2,
+        tabSize: 2,
+        lineWrapping: true,
+        viewportMargin: Infinity,
+    });
+
+    // Add auto-save functionality
+    editor.on('change', (cm) => {
+        debouncedPreviewUpdate();
+        // Save to localStorage
+        const content = cm.getValue();
+        storage.save(STORAGE_KEYS.REALTIME_HTML, content, defaultStuff);
+    });
+    
+    editor.focus();
+    editor.execCommand('selectAll');
+    
+    debouncedPreviewUpdate();
+}
 
 // Gist loading function
 async function loadGistContent(url) {
@@ -495,60 +521,24 @@ const debouncedPreviewUpdate = debounce(() => {
     iframe.srcdoc = html;
 }, 150);
 
-// Initialize editor
-async function init() {
-    let initialContent = defaultStuff;
-    const hash = window.location.hash;
-
-    if (hash) {
-        if (hash.startsWith('#code=')) {
-            try {
-                const encoded = hash.substring(6);
-                const content = decodeURIComponent(escape(atob(encoded)));
-                if (content) initialContent = content;
-            } catch (error) {
-                console.error('Error loading shared code:', error);
-            }
-        } else if (hash.startsWith('#@') || hash.startsWith('#http')) {
-            const gistUrl = hash.startsWith('#@') ? hash.substring(2) : hash.substring(1);
-            const content = await loadGistContent(gistUrl);
-            if (content) initialContent = content;
-        }
-    } else {
-        initialContent = storage.load();
-    }
-
-    editor = CodeMirror(document.querySelector('#editor'), {
-        value: initialContent,
-        mode: 'htmlmixed',
-        theme: 'dracula',
-        lineNumbers: true,
-        autoCloseTags: true,
-        autoCloseBrackets: true,
-        matchBrackets: true,
-        indentUnit: 2,
-        tabSize: 2,
-        lineWrapping: true,
-        viewportMargin: Infinity,
-        // Add performance options
-        firstLineNumber: 1,
-        workTime: 20,
-        workDelay: 300,
+// Move window.onload inside module
+window.addEventListener('load', function() {
+    Split(['#left-panel', '#right-panel'], {
+        sizes: [50, 50],
+        minSize: [200, 200],
+        gutterSize: 10,
+        dragInterval: 1,
+        snapOffset: 0,
+        elementStyle: (dimension, size, gutterSize) => ({
+            'flex-basis': `calc(${size}% - ${gutterSize}px)`,
+        }),
+        gutterStyle: (dimension, gutterSize) => ({
+            'flex-basis': `${gutterSize}px`,
+        }),
+        onDrag: () => editor.refresh()
     });
-
-    // Add auto-save functionality
-    editor.on('change', (cm) => {
-        debouncedPreviewUpdate();
-        // Save to localStorage
-        const content = cm.getValue();
-        storage.save(content);
-    });
-    
-    editor.focus();
-    editor.execCommand('selectAll');
-    
-    debouncedPreviewUpdate();
-}
+    init();
+});
 </script>
 </head>
 <body style="margin: 0; padding: 0; overflow: hidden;">
@@ -599,24 +589,5 @@ async function init() {
             <iframe id="preview" sandbox="allow-scripts allow-same-origin allow-modals allow-forms allow-popups" style="width: 100%; height: 100%; border: none;"></iframe>
         </div>
     </div>
-    <script>
-        window.onload = function() {
-            Split(['#left-panel', '#right-panel'], {
-                sizes: [50, 50],
-                minSize: [200, 200],
-                gutterSize: 10,
-                dragInterval: 1,
-                snapOffset: 0,
-                elementStyle: (dimension, size, gutterSize) => ({
-                    'flex-basis': `calc(${size}% - ${gutterSize}px)`,
-                }),
-                gutterStyle: (dimension, gutterSize) => ({
-                    'flex-basis': `${gutterSize}px`,
-                }),
-                onDrag: () => editor.refresh()
-            });
-            init();
-        };
-    </script>
 </body>
 </html>
