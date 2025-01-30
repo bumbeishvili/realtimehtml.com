@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Svelte Editor - Live Preview with Tailwind Support</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Free online Svelte editor with Tailwind CSS support and instant live preview. Build beautiful UI components with Svelte and Tailwind CSS classes in real-time.">
+
+    <!-- Add CodeMirror CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.css">
+    <link rel="stylesheet" href="./scrollbar.css">
+
+    <!-- Load CodeMirror and its dependencies -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/xml-hint.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/html-hint.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closetag.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchbrackets.js"></script>
+
+    <!-- Add Split.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
+
+    <!-- Add Svelte compiler -->
+    <script src="https://unpkg.com/svelte@3.59.2/compiler.js"></script>
+
+    <!-- Add Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- Add Storage Utils -->
+    <script type="module" src="./utils.js"></script>
+
+    <style>
+        /* Base styles */
+        :root {
+            --system-fonts: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+            --modal-bg: #2d2d2d;
+            --modal-hover: #3d3d3d;
+            --transition-default: all 0.2s ease;
+        }
+
+        /* Editor styles */
+        .CodeMirror {
+            height: 100vh;
+            font-size: 14px;
+        }
+
+        /* Split panel styles */
+        .split {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .split-panel {
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #editor {
+            min-width: 0;
+        }
+
+        /* Gutter styles */
+        .gutter {
+            background-color: #333;
+            background-repeat: no-repeat;
+            background-position: 50%;
+        }
+
+        .gutter:hover {
+            background-color: #444;
+        }
+
+        .gutter.gutter-horizontal {
+            cursor: col-resize;
+            width: 10px;
+        }
+    </style>
+
+    <script type="module">
+        import { storage, STORAGE_KEYS, embed } from './utils.js';
+
+        // Define default Svelte component
+        const defaultStuff = `<script>
+    let count = 0;
+    let name = 'counter';
+<\/script>
+
+<main>
+    <div>
+        <h2 class="text-3xl pb-3" >Count is {count}</h2>
+        <button class='bg-black p-3 rounded text-white ' 
+                on:click={() => count += 1}>
+            Increment {name}
+        </button>
+    </div>
+</main>
+
+<style>
+    main {
+        text-align: center;
+        margin-top: 45%;
+    }
+
+    button:hover {
+        background: #ff5722;
+    }
+</style>`;
+
+        let editor;
+        let previousContent = '';
+
+        // Initialize editor
+        function init() {
+            let initialContent = defaultStuff;
+            const hash = window.location.hash;
+
+            if (hash && hash.startsWith('#code=')) {
+                try {
+                    const encoded = hash.substring(6);
+                    const content = decodeURIComponent(escape(atob(encoded)));
+                    if (content) initialContent = content;
+                } catch (error) {
+                    console.error('Error loading shared code:', error);
+                }
+            }
+
+            // Initialize CodeMirror
+            editor = CodeMirror(document.querySelector('#editor'), {
+                value: initialContent,
+                mode: 'htmlmixed',
+                theme: 'dracula',
+                lineNumbers: true,
+                autoCloseTags: true,
+                autoCloseBrackets: true,
+                matchBrackets: true,
+                lineWrapping: true,
+                indentUnit: 2,
+                tabSize: 2,
+                viewportMargin: Infinity
+            });
+
+            editor.on('change', (cm) => {
+                debouncedPreviewUpdate();
+                const content = cm.getValue();
+                storage.save(STORAGE_KEYS.TAILWIND_EDITOR, content, defaultStuff);
+            });
+            
+            editor.focus();
+            debouncedPreviewUpdate();
+        }
+
+        // Preview update function with Svelte compilation
+        const debouncedPreviewUpdate = debounce(() => {
+            const newContent = editor.getValue();
+            if (previousContent === newContent) return;
+            
+            previousContent = newContent;
+            const rightPanel = document.querySelector('#right-panel');
+            const iframe = document.querySelector('#preview') || document.createElement('iframe');
+            
+            if (!iframe.id) {
+                iframe.id = 'preview';
+                iframe.style.cssText = 'width: 100%; height: 100%; border: none;';
+                iframe.setAttribute('sandbox', 'allow-scripts allow-same-origin allow-modals allow-forms allow-popups');
+                rightPanel.appendChild(iframe);
+            }
+
+            try {
+                const { js, css } = window.svelte.compile(newContent, {
+                    css: true,
+                    dev: true,
+                    format: 'esm',
+                    name: 'SvelteComponent'
+                });
+
+                const html = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <meta charset="utf-8">
+                        <script src="https://cdn.tailwindcss.com"><\/script>
+                        <style>${css.code}<\/style>
+                    </head>
+                    <body>
+                        <div id="app"></div>
+                        <script async src="https://unpkg.com/es-module-shims@1.7.0/dist/es-module-shims.js"><\/script>
+                        <script type="importmap">
+                            {
+                                "imports": {
+                                    "svelte": "https://unpkg.com/svelte@3.59.2/index.mjs",
+                                    "svelte/internal": "https://unpkg.com/svelte@3.59.2/internal/index.mjs"
+                                }
+                            }
+                        <\/script>
+                        <script type="module">
+                            import * as svelte from 'svelte';
+                            import * as internal from 'svelte/internal';
+                            
+                            // Make svelte internals available globally
+                            window.svelte = svelte;
+                            window.svelteInternal = internal;
+                            
+                            ${js.code}
+                            
+                            new SvelteComponent({
+                                target: document.getElementById('app')
+                            });
+                        <\/script>
+                    </body>
+                    </html>
+                `;
+                
+                iframe.srcdoc = html;
+            } catch (error) {
+                iframe.srcdoc = `
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                        <style>
+                            body {
+                                font-family: monospace;
+                                padding: 20px;
+                                color: #ff3e00;
+                                white-space: pre-wrap;
+                                word-wrap: break-word;
+                            }
+                        </style>
+                    </head>
+                    <body>
+                        Svelte Compilation Error:
+                        ${error.message}
+                    </body>
+                    </html>
+                `;
+            }
+        }, 150);
+
+        // Debounce function
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Initialize on load
+        window.addEventListener('load', () => {
+            // Initialize Split.js
+            Split(['#left-panel', '#right-panel'], {
+                sizes: [50, 50],
+                minSize: [200, 200],
+                gutterSize: 10,
+                dragInterval: 1,
+                snapOffset: 0,
+                elementStyle: (dimension, size, gutterSize) => ({
+                    'flex-basis': `calc(${size}% - ${gutterSize}px)`,
+                }),
+                gutterStyle: (dimension, gutterSize) => ({
+                    'flex-basis': `${gutterSize}px`,
+                }),
+                onDrag: () => editor?.refresh()
+            });
+
+            // Initialize editor
+            init();
+        });
+    </script>
+</head>
+<body style="margin: 0; padding: 0; overflow: hidden;">
+    <div class="split">
+        <div class="split-panel" id="left-panel">
+            <div id="editor"></div>
+        </div>
+        <div class="gutter"></div>
+        <div class="split-panel" id="right-panel"></div>
+    </div>
+</body>
+</html>

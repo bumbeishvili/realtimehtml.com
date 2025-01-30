@@ -84,6 +84,7 @@
 <!-- Add CodeMirror CSS -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.css">
 <link rel="stylesheet" href="./scrollbar.css">
 
 <!-- Load CodeMirror core first -->
@@ -97,9 +98,8 @@
 
 <!-- Load addons -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/show-hint.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/html-hint.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/xml-hint.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/anyword-hint.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/hint/html-hint.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closetag.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/closebrackets.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/edit/matchbrackets.js"></script>
@@ -126,6 +126,42 @@
     --modal-bg: #2d2d2d;
     --modal-hover: #3d3d3d;
     --transition-default: all 0.2s ease;
+}
+
+/* CodeMirror Hint Styles */
+.CodeMirror-hints {
+    position: absolute;
+    z-index: 10000;
+    overflow: hidden;
+    list-style: none;
+    margin: 0;
+    padding: 2px;
+    border-radius: 4px;
+    border: 1px solid #444;
+    background: #282a36;
+    font-size: 14px;
+    font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+    max-height: 20em;
+    overflow-y: auto;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+}
+
+.CodeMirror-hint {
+    margin: 0;
+    padding: 4px 8px;
+    border-radius: 2px;
+    white-space: pre;
+    color: #f8f8f2;
+    cursor: pointer;
+}
+
+li.CodeMirror-hint-active {
+    background: #44475a;
+    color: #f8f8f2;
+}
+
+.tailwind-suggestion {
+    color: #8be9fd;
 }
 
 /* Editor styles */
@@ -368,6 +404,95 @@ window.modal = modal;
 window.shareCode = shareCode;
 window.copyEmbedCode = copyEmbedCode;
 
+// Define Tailwind classes for autocompletion
+const tailwindClasses = [
+    // Layout
+    'container', 'flex', 'grid', 'block', 'inline', 'inline-block', 'hidden', 'flow-root', 'contents', 'list-item', 'relative', 'absolute', 'fixed', 'sticky',
+    
+    // Flexbox
+    'flex-row', 'flex-col', 'flex-row-reverse', 'flex-col-reverse',
+    'flex-wrap', 'flex-wrap-reverse', 'flex-nowrap',
+    'flex-1', 'flex-auto', 'flex-initial', 'flex-none',
+    'items-start', 'items-end', 'items-center', 'items-baseline', 'items-stretch',
+    'justify-start', 'justify-end', 'justify-center', 'justify-between', 'justify-around', 'justify-evenly',
+    'content-center', 'content-start', 'content-end', 'content-between', 'content-around', 'content-evenly',
+    
+    // Grid
+    'grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4', 'grid-cols-5', 'grid-cols-6', 'grid-cols-7', 'grid-cols-8', 'grid-cols-9', 'grid-cols-10', 'grid-cols-11', 'grid-cols-12',
+    'grid-cols-none',
+    'col-auto', 'col-span-1', 'col-span-2', 'col-span-3', 'col-span-4', 'col-span-5', 'col-span-6', 'col-span-7', 'col-span-8', 'col-span-9', 'col-span-10', 'col-span-11', 'col-span-12',
+    'col-span-full',
+    'grid-rows-1', 'grid-rows-2', 'grid-rows-3', 'grid-rows-4', 'grid-rows-5', 'grid-rows-6',
+    'row-auto', 'row-span-1', 'row-span-2', 'row-span-3', 'row-span-4', 'row-span-5', 'row-span-6',
+    'row-span-full',
+    
+    // Spacing (Padding)
+    'p-0', 'p-px', 'p-0.5', 'p-1', 'p-1.5', 'p-2', 'p-2.5', 'p-3', 'p-3.5', 'p-4', 'p-5', 'p-6', 'p-7', 'p-8', 'p-9', 'p-10', 'p-11', 'p-12', 'p-14', 'p-16', 'p-20', 'p-24', 'p-28', 'p-32', 'p-36', 'p-40', 'p-44', 'p-48', 'p-52', 'p-56', 'p-60', 'p-64', 'p-72', 'p-80', 'p-96',
+    'px-0', 'px-px', 'px-0.5', 'px-1', 'px-1.5', 'px-2', 'px-2.5', 'px-3', 'px-3.5', 'px-4', 'px-5', 'px-6', 'px-7', 'px-8', 'px-9', 'px-10', 'px-11', 'px-12', 'px-14', 'px-16', 'px-20', 'px-24', 'px-28', 'px-32', 'px-36', 'px-40', 'px-44', 'px-48', 'px-52', 'px-56', 'px-60', 'px-64', 'px-72', 'px-80', 'px-96',
+    'py-0', 'py-px', 'py-0.5', 'py-1', 'py-1.5', 'py-2', 'py-2.5', 'py-3', 'py-3.5', 'py-4', 'py-5', 'py-6', 'py-7', 'py-8', 'py-9', 'py-10', 'py-11', 'py-12', 'py-14', 'py-16', 'py-20', 'py-24', 'py-28', 'py-32', 'py-36', 'py-40', 'py-44', 'py-48', 'py-52', 'py-56', 'py-60', 'py-64', 'py-72', 'py-80', 'py-96',
+    'pt-0', 'pt-px', 'pt-0.5', 'pt-1', 'pt-1.5', 'pt-2', 'pt-2.5', 'pt-3', 'pt-3.5', 'pt-4', 'pt-5', 'pt-6', 'pt-7', 'pt-8', 'pt-9', 'pt-10', 'pt-11', 'pt-12', 'pt-14', 'pt-16', 'pt-20', 'pt-24', 'pt-28', 'pt-32', 'pt-36', 'pt-40', 'pt-44', 'pt-48', 'pt-52', 'pt-56', 'pt-60', 'pt-64', 'pt-72', 'pt-80', 'pt-96',
+    'pr-0', 'pr-px', 'pr-0.5', 'pr-1', 'pr-1.5', 'pr-2', 'pr-2.5', 'pr-3', 'pr-3.5', 'pr-4', 'pr-5', 'pr-6', 'pr-7', 'pr-8', 'pr-9', 'pr-10', 'pr-11', 'pr-12', 'pr-14', 'pr-16', 'pr-20', 'pr-24', 'pr-28', 'pr-32', 'pr-36', 'pr-40', 'pr-44', 'pr-48', 'pr-52', 'pr-56', 'pr-60', 'pr-64', 'pr-72', 'pr-80', 'pr-96',
+    'pb-0', 'pb-px', 'pb-0.5', 'pb-1', 'pb-1.5', 'pb-2', 'pb-2.5', 'pb-3', 'pb-3.5', 'pb-4', 'pb-5', 'pb-6', 'pb-7', 'pb-8', 'pb-9', 'pb-10', 'pb-11', 'pb-12', 'pb-14', 'pb-16', 'pb-20', 'pb-24', 'pb-28', 'pb-32', 'pb-36', 'pb-40', 'pb-44', 'pb-48', 'pb-52', 'pb-56', 'pb-60', 'pb-64', 'pb-72', 'pb-80', 'pb-96',
+    'pl-0', 'pl-px', 'pl-0.5', 'pl-1', 'pl-1.5', 'pl-2', 'pl-2.5', 'pl-3', 'pl-3.5', 'pl-4', 'pl-5', 'pl-6', 'pl-7', 'pl-8', 'pl-9', 'pl-10', 'pl-11', 'pl-12', 'pl-14', 'pl-16', 'pl-20', 'pl-24', 'pl-28', 'pl-32', 'pl-36', 'pl-40', 'pl-44', 'pl-48', 'pl-52', 'pl-56', 'pl-60', 'pl-64', 'pl-72', 'pl-80', 'pl-96',
+
+    // Spacing (Margin)
+    'm-0', 'm-px', 'm-0.5', 'm-1', 'm-1.5', 'm-2', 'm-2.5', 'm-3', 'm-3.5', 'm-4', 'm-5', 'm-6', 'm-7', 'm-8', 'm-9', 'm-10', 'm-11', 'm-12', 'm-14', 'm-16', 'm-20', 'm-24', 'm-28', 'm-32', 'm-36', 'm-40', 'm-44', 'm-48', 'm-52', 'm-56', 'm-60', 'm-64', 'm-72', 'm-80', 'm-96', 'm-auto',
+    'mx-0', 'mx-px', 'mx-0.5', 'mx-1', 'mx-1.5', 'mx-2', 'mx-2.5', 'mx-3', 'mx-3.5', 'mx-4', 'mx-5', 'mx-6', 'mx-7', 'mx-8', 'mx-9', 'mx-10', 'mx-11', 'mx-12', 'mx-14', 'mx-16', 'mx-20', 'mx-24', 'mx-28', 'mx-32', 'mx-36', 'mx-40', 'mx-44', 'mx-48', 'mx-52', 'mx-56', 'mx-60', 'mx-64', 'mx-72', 'mx-80', 'mx-96', 'mx-auto',
+    'my-0', 'my-px', 'my-0.5', 'my-1', 'my-1.5', 'my-2', 'my-2.5', 'my-3', 'my-3.5', 'my-4', 'my-5', 'my-6', 'my-7', 'my-8', 'my-9', 'my-10', 'my-11', 'my-12', 'my-14', 'my-16', 'my-20', 'my-24', 'my-28', 'my-32', 'my-36', 'my-40', 'my-44', 'my-48', 'my-52', 'my-56', 'my-60', 'my-64', 'my-72', 'my-80', 'my-96', 'my-auto',
+    
+    // Width & Height
+    'w-0', 'w-px', 'w-0.5', 'w-1', 'w-1.5', 'w-2', 'w-2.5', 'w-3', 'w-3.5', 'w-4', 'w-5', 'w-6', 'w-7', 'w-8', 'w-9', 'w-10', 'w-11', 'w-12', 'w-14', 'w-16', 'w-20', 'w-24', 'w-28', 'w-32', 'w-36', 'w-40', 'w-44', 'w-48', 'w-52', 'w-56', 'w-60', 'w-64', 'w-72', 'w-80', 'w-96',
+    'w-1/2', 'w-1/3', 'w-2/3', 'w-1/4', 'w-2/4', 'w-3/4', 'w-1/5', 'w-2/5', 'w-3/5', 'w-4/5', 'w-1/6', 'w-2/6', 'w-3/6', 'w-4/6', 'w-5/6',
+    'w-auto', 'w-full', 'w-screen', 'w-min', 'w-max', 'w-fit',
+    
+    // Typography
+    'text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl', 'text-5xl', 'text-6xl', 'text-7xl', 'text-8xl', 'text-9xl',
+    'font-thin', 'font-extralight', 'font-light', 'font-normal', 'font-medium', 'font-semibold', 'font-bold', 'font-extrabold', 'font-black',
+    'text-left', 'text-center', 'text-right', 'text-justify',
+    'uppercase', 'lowercase', 'capitalize', 'normal-case',
+    'truncate', 'text-ellipsis', 'text-clip',
+    'align-baseline', 'align-top', 'align-middle', 'align-bottom', 'align-text-top', 'align-text-bottom',
+    
+    // Colors (with shades)
+    ...['slate', 'gray', 'zinc', 'neutral', 'stone', 'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose'].flatMap(color => [
+        `text-${color}-50`, `text-${color}-100`, `text-${color}-200`, `text-${color}-300`, `text-${color}-400`,
+        `text-${color}-500`, `text-${color}-600`, `text-${color}-700`, `text-${color}-800`, `text-${color}-900`,
+        `bg-${color}-50`, `bg-${color}-100`, `bg-${color}-200`, `bg-${color}-300`, `bg-${color}-400`,
+        `bg-${color}-500`, `bg-${color}-600`, `bg-${color}-700`, `bg-${color}-800`, `bg-${color}-900`,
+        `border-${color}-50`, `border-${color}-100`, `border-${color}-200`, `border-${color}-300`, `border-${color}-400`,
+        `border-${color}-500`, `border-${color}-600`, `border-${color}-700`, `border-${color}-800`, `border-${color}-900`,
+    ]),
+    
+    // Borders
+    'border', 'border-0', 'border-2', 'border-4', 'border-8',
+    'border-x', 'border-y', 'border-t', 'border-r', 'border-b', 'border-l',
+    'border-solid', 'border-dashed', 'border-dotted', 'border-double', 'border-hidden', 'border-none',
+    'rounded-none', 'rounded-sm', 'rounded', 'rounded-md', 'rounded-lg', 'rounded-xl', 'rounded-2xl', 'rounded-3xl', 'rounded-full',
+    
+    // Effects
+    'shadow-sm', 'shadow', 'shadow-md', 'shadow-lg', 'shadow-xl', 'shadow-2xl', 'shadow-inner', 'shadow-none',
+    'opacity-0', 'opacity-5', 'opacity-10', 'opacity-20', 'opacity-25', 'opacity-30', 'opacity-40', 'opacity-50',
+    'opacity-60', 'opacity-70', 'opacity-75', 'opacity-80', 'opacity-90', 'opacity-95', 'opacity-100',
+    
+    // Transitions & Animation
+    'transition', 'transition-all', 'transition-colors', 'transition-opacity', 'transition-shadow', 'transition-transform',
+    'duration-75', 'duration-100', 'duration-150', 'duration-200', 'duration-300', 'duration-500', 'duration-700', 'duration-1000',
+    'ease-linear', 'ease-in', 'ease-out', 'ease-in-out',
+    'animate-none', 'animate-spin', 'animate-ping', 'animate-pulse', 'animate-bounce',
+    
+    // Hover/Focus States
+    'hover:underline', 'hover:no-underline',
+    'hover:opacity-0', 'hover:opacity-50', 'hover:opacity-100',
+    'focus:outline-none', 'focus:ring', 'focus:ring-1', 'focus:ring-2', 'focus:ring-4',
+    'focus:border-transparent', 'focus:border-current',
+    
+    // Responsive Prefixes
+    'sm:', 'md:', 'lg:', 'xl:', '2xl:',
+    
+    // State Variants
+    'hover:', 'focus:', 'active:', 'disabled:', 'visited:', 'checked:', 'first:', 'last:', 'odd:', 'even:', 'group-hover:', 'group-focus:', 'focus-within:', 'focus-visible:', 'motion-safe:', 'motion-reduce:', 'dark:'
+];
+
 const defaultStuff = `<!DOCTYPE html>
 <html>
 <head>
@@ -392,134 +517,6 @@ const defaultStuff = `<!DOCTYPE html>
 
 let editor;
 let previousContent = '';
-
-// Tailwind class suggestions
-const tailwindClasses = [
-    // Layout
-    'container', 'flex', 'grid', 'block', 'inline', 'inline-block', 'hidden', 'flow-root', 'contents', 'list-item', 'relative', 'absolute', 'fixed', 'sticky',
-    
-    // Basic Colors
-    'text-white', 'text-black', 'text-transparent', 'text-current',
-    'bg-white', 'bg-black', 'bg-transparent', 'bg-current',
-    'border-white', 'border-black', 'border-transparent', 'border-current',
-    
-    // Colors (with shades)
-    ...['slate', 'gray', 'zinc', 'neutral', 'stone', 'red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose'].flatMap(color => [
-        `text-${color}-50`, `text-${color}-100`, `text-${color}-200`, `text-${color}-300`, `text-${color}-400`,
-        `text-${color}-500`, `text-${color}-600`, `text-${color}-700`, `text-${color}-800`, `text-${color}-900`, `text-${color}-950`,
-        `bg-${color}-50`, `bg-${color}-100`, `bg-${color}-200`, `bg-${color}-300`, `bg-${color}-400`,
-        `bg-${color}-500`, `bg-${color}-600`, `bg-${color}-700`, `bg-${color}-800`, `bg-${color}-900`, `bg-${color}-950`,
-        `border-${color}-50`, `border-${color}-100`, `border-${color}-200`, `border-${color}-300`, `border-${color}-400`,
-        `border-${color}-500`, `border-${color}-600`, `border-${color}-700`, `border-${color}-800`, `border-${color}-900`, `border-${color}-950`,
-    ]),
-    
-    // Flexbox
-    'flex-row', 'flex-row-reverse', 'flex-col', 'flex-col-reverse', 'flex-wrap', 'flex-wrap-reverse', 'flex-nowrap',
-    'flex-1', 'flex-auto', 'flex-initial', 'flex-none', 'flex-grow', 'flex-grow-0', 'flex-shrink', 'flex-shrink-0',
-    'justify-start', 'justify-end', 'justify-center', 'justify-between', 'justify-around', 'justify-evenly',
-    'items-start', 'items-end', 'items-center', 'items-baseline', 'items-stretch',
-    'self-auto', 'self-start', 'self-end', 'self-center', 'self-stretch', 'self-baseline',
-    
-    // Background Utilities
-    'bg-none', 'bg-gradient-to-t', 'bg-gradient-to-tr', 'bg-gradient-to-r', 'bg-gradient-to-br', 
-    'bg-gradient-to-b', 'bg-gradient-to-bl', 'bg-gradient-to-l', 'bg-gradient-to-tl',
-    'bg-clip-border', 'bg-clip-padding', 'bg-clip-content', 'bg-clip-text',
-    'bg-fixed', 'bg-local', 'bg-scroll',
-    'bg-center', 'bg-top', 'bg-right', 'bg-bottom', 'bg-left',
-    'bg-repeat', 'bg-no-repeat', 'bg-repeat-x', 'bg-repeat-y', 'bg-repeat-round', 'bg-repeat-space',
-    'bg-auto', 'bg-cover', 'bg-contain',
-    
-    // Text Decoration
-    'underline', 'overline', 'line-through', 'no-underline',
-    'decoration-solid', 'decoration-double', 'decoration-dotted', 'decoration-dashed', 'decoration-wavy',
-    'decoration-0', 'decoration-1', 'decoration-2', 'decoration-4', 'decoration-8',
-    'decoration-auto', 'decoration-from-font',
-    
-    // Text Transform
-    'uppercase', 'lowercase', 'capitalize', 'normal-case',
-    
-    // Text Overflow
-    'truncate', 'text-ellipsis', 'text-clip', 'break-normal', 'break-words', 'break-all',
-    
-    // Font Family
-    'font-sans', 'font-serif', 'font-mono',
-    
-    // Text Alignment
-    'text-left', 'text-center', 'text-right', 'text-justify', 'text-start', 'text-end',
-    
-    // Lists
-    'list-none', 'list-disc', 'list-decimal', 'list-inside', 'list-outside',
-    
-    // Placeholder Color
-    'placeholder-transparent', 'placeholder-current', 'placeholder-black', 'placeholder-white',
-    
-    // Grid
-    'grid-cols-1', 'grid-cols-2', 'grid-cols-3', 'grid-cols-4', 'grid-cols-5', 'grid-cols-6', 'grid-cols-12',
-    'grid-rows-1', 'grid-rows-2', 'grid-rows-3', 'grid-rows-4', 'grid-rows-5', 'grid-rows-6',
-    'gap-0', 'gap-1', 'gap-2', 'gap-3', 'gap-4', 'gap-5', 'gap-6', 'gap-8', 'gap-10', 'gap-12',
-    'col-span-1', 'col-span-2', 'col-span-3', 'col-span-4', 'col-span-5', 'col-span-6', 'col-span-12',
-    'row-span-1', 'row-span-2', 'row-span-3', 'row-span-4', 'row-span-5', 'row-span-6',
-    
-    // Spacing
-    'p-0', 'p-1', 'p-2', 'p-3', 'p-4', 'p-5', 'p-6', 'p-8', 'p-10', 'p-12', 'p-16', 'p-20',
-    'px-0', 'px-1', 'px-2', 'px-3', 'px-4', 'px-5', 'px-6', 'px-8', 'px-10', 'px-12', 'px-16', 'px-20',
-    'py-0', 'py-1', 'py-2', 'py-3', 'py-4', 'py-5', 'py-6', 'py-8', 'py-10', 'py-12', 'py-16', 'py-20',
-    'm-0', 'm-1', 'm-2', 'm-3', 'm-4', 'm-5', 'm-6', 'm-8', 'm-10', 'm-12', 'm-16', 'm-20',
-    'mx-0', 'mx-1', 'mx-2', 'mx-3', 'mx-4', 'mx-5', 'mx-6', 'mx-8', 'mx-10', 'mx-12', 'mx-16', 'mx-20', 'mx-auto',
-    'my-0', 'my-1', 'my-2', 'my-3', 'my-4', 'my-5', 'my-6', 'my-8', 'my-10', 'my-12', 'my-16', 'my-20',
-    'space-x-0', 'space-x-1', 'space-x-2', 'space-x-3', 'space-x-4', 'space-x-6', 'space-x-8', 'space-x-10', 'space-x-12',
-    'space-y-0', 'space-y-1', 'space-y-2', 'space-y-3', 'space-y-4', 'space-y-6', 'space-y-8', 'space-y-10', 'space-y-12',
-    
-    // Sizing
-    'w-0', 'w-1', 'w-2', 'w-3', 'w-4', 'w-5', 'w-6', 'w-8', 'w-10', 'w-12', 'w-16', 'w-20', 'w-24', 'w-32', 'w-40', 'w-48', 'w-56', 'w-64',
-    'w-auto', 'w-full', 'w-screen', 'w-min', 'w-max', 'w-fit', 'w-1/2', 'w-1/3', 'w-2/3', 'w-1/4', 'w-3/4',
-    'h-0', 'h-1', 'h-2', 'h-3', 'h-4', 'h-5', 'h-6', 'h-8', 'h-10', 'h-12', 'h-16', 'h-20', 'h-24', 'h-32', 'h-40', 'h-48', 'h-56', 'h-64',
-    'h-auto', 'h-full', 'h-screen', 'h-min', 'h-max', 'h-fit',
-    
-    // Typography
-    'text-xs', 'text-sm', 'text-base', 'text-lg', 'text-xl', 'text-2xl', 'text-3xl', 'text-4xl', 'text-5xl', 'text-6xl', 'text-7xl', 'text-8xl', 'text-9xl',
-    'font-thin', 'font-extralight', 'font-light', 'font-normal', 'font-medium', 'font-semibold', 'font-bold', 'font-extrabold', 'font-black',
-    'tracking-tighter', 'tracking-tight', 'tracking-normal', 'tracking-wide', 'tracking-wider', 'tracking-widest',
-    'leading-3', 'leading-4', 'leading-5', 'leading-6', 'leading-7', 'leading-8', 'leading-9', 'leading-10',
-    
-    // Borders
-    'border', 'border-0', 'border-2', 'border-4', 'border-8', 'border-x', 'border-y', 'border-t', 'border-r', 'border-b', 'border-l',
-    'rounded-none', 'rounded-sm', 'rounded', 'rounded-md', 'rounded-lg', 'rounded-xl', 'rounded-2xl', 'rounded-3xl', 'rounded-full',
-    'border-solid', 'border-dashed', 'border-dotted', 'border-double', 'border-hidden', 'border-none',
-    
-    // Effects
-    'shadow-sm', 'shadow', 'shadow-md', 'shadow-lg', 'shadow-xl', 'shadow-2xl', 'shadow-inner', 'shadow-none',
-    'opacity-0', 'opacity-5', 'opacity-10', 'opacity-20', 'opacity-25', 'opacity-30', 'opacity-40', 'opacity-50',
-    'opacity-60', 'opacity-70', 'opacity-75', 'opacity-80', 'opacity-90', 'opacity-95', 'opacity-100',
-    'blur-none', 'blur-sm', 'blur', 'blur-md', 'blur-lg', 'blur-xl', 'blur-2xl', 'blur-3xl',
-    
-    // Transitions & Animation
-    'transition', 'transition-all', 'transition-colors', 'transition-opacity', 'transition-shadow', 'transition-transform',
-    'duration-75', 'duration-100', 'duration-150', 'duration-200', 'duration-300', 'duration-500', 'duration-700', 'duration-1000',
-    'ease-linear', 'ease-in', 'ease-out', 'ease-in-out',
-    'animate-none', 'animate-spin', 'animate-ping', 'animate-pulse', 'animate-bounce',
-    
-    // Transforms
-    'scale-0', 'scale-50', 'scale-75', 'scale-90', 'scale-95', 'scale-100', 'scale-105', 'scale-110', 'scale-125', 'scale-150',
-    'rotate-0', 'rotate-45', 'rotate-90', 'rotate-180', '-rotate-45', '-rotate-90', '-rotate-180',
-    'translate-x-0', 'translate-x-1', 'translate-x-2', 'translate-x-4', 'translate-x-8', '-translate-x-1', '-translate-x-2',
-    'translate-y-0', 'translate-y-1', 'translate-y-2', 'translate-y-4', 'translate-y-8', '-translate-y-1', '-translate-y-2',
-    
-    // Interactivity
-    'cursor-auto', 'cursor-default', 'cursor-pointer', 'cursor-wait', 'cursor-text', 'cursor-move', 'cursor-help', 'cursor-not-allowed',
-    'select-none', 'select-text', 'select-all', 'select-auto',
-    'resize-none', 'resize-y', 'resize-x', 'resize',
-    
-    // Filters
-    'grayscale-0', 'grayscale', 'invert-0', 'invert', 'sepia-0', 'sepia',
-    'brightness-0', 'brightness-50', 'brightness-75', 'brightness-90', 'brightness-100', 'brightness-105', 'brightness-110', 'brightness-125', 'brightness-150', 'brightness-200',
-    
-    // State Variants
-    'hover:', 'focus:', 'active:', 'disabled:', 'visited:', 'checked:', 'first:', 'last:', 'odd:', 'even:', 'group-hover:', 'group-focus:', 'focus-within:', 'focus-visible:', 'motion-safe:', 'motion-reduce:', 'dark:',
-    
-    // Responsive Variants
-    'sm:', 'md:', 'lg:', 'xl:', '2xl:'
-];
 
 // Initialize editor
 function init() {
@@ -561,55 +558,128 @@ function init() {
         indentUnit: 2,
         tabSize: 2,
         viewportMargin: Infinity,
+        extraKeys: {
+            "'<'": completeAfter,
+            "'/'": completeIfAfterLt,
+            "' '": completeIfInClass,
+            "'='": completeIfInClass,
+            "Ctrl-Space": "autocomplete"
+        },
         hintOptions: {
             completeSingle: false,
             hint: function(editor) {
                 const cursor = editor.getCursor();
                 const token = editor.getTokenAt(cursor);
                 const line = editor.getLine(cursor.line);
+                const tokenString = token.string;
                 
-                // Check if we're in a class attribute
-                if (token.type === "string" || 
-                    (token.type === "attribute" && token.string === "class") || 
-                    (line.slice(0, cursor.ch).includes('class="') || line.slice(0, cursor.ch).includes("class='"))) {
-                    
-                    const currentWord = token.string.slice(0, cursor.ch - token.start);
-                    const lastClass = currentWord.split(/[\s"']+/).pop() || '';
+                console.log('Hint function called:', {
+                    cursor,
+                    token,
+                    line,
+                    tokenString
+                });
+                
+                // Check if we're inside a class attribute
+                const isInClassAttribute = (function() {
+                    const upToToken = line.slice(0, cursor.ch);
+                    const classMatch = upToToken.match(/class\s*=\s*["'][^"']*/);
+                    console.log('Class attribute check:', {
+                        upToToken,
+                        classMatch,
+                        isMatch: classMatch !== null
+                    });
+                    return classMatch !== null;
+                })();
 
-                    const matchingClasses = tailwindClasses
-                        .filter(cls => cls.toLowerCase().startsWith(lastClass.toLowerCase()))
-                        .map(cls => ({
-                            text: cls,
-                            displayText: cls,
-                            className: 'tailwind-suggestion',
-                            hint: function(cm, data, completion) {
-                                const from = {line: cursor.line, ch: cursor.ch - lastClass.length};
-                                const to = {line: cursor.line, ch: cursor.ch};
-                                cm.replaceRange(completion.text, from, to);
-                            }
-                        }));
+                if (!isInClassAttribute) return null;
+                
+                // Get the current word being typed
+                const currentWord = (function() {
+                    const beforeCursor = line.slice(0, cursor.ch);
+                    const classes = beforeCursor.split(/[\s"']+/);
+                    const word = classes[classes.length - 1] || '';
+                    console.log('Current word:', {
+                        beforeCursor,
+                        classes,
+                        word
+                    });
+                    return word;
+                })();
 
-                    if (matchingClasses.length === 0) return;
+                // Filter matching classes
+                const matchingClasses = tailwindClasses
+                    .filter(cls => {
+                        // If currentWord starts with a modifier (like hover:), match against the base class
+                        const [modifier, baseClass] = currentWord.split(':');
+                        if (baseClass) {
+                            return cls.startsWith(modifier + ':') && cls.toLowerCase().includes(baseClass.toLowerCase());
+                        }
+                        return cls.toLowerCase().startsWith(currentWord.toLowerCase());
+                    });
 
-                    return {
-                        list: matchingClasses,
-                        from: CodeMirror.Pos(cursor.line, cursor.ch - lastClass.length),
-                        to: cursor.ch
-                    };
-                }
+                console.log('Matching classes:', matchingClasses);
+
+                if (matchingClasses.length === 0) return null;
+
+                const result = {
+                    list: matchingClasses.map(cls => ({
+                        text: cls,
+                        displayText: cls,
+                        className: 'tailwind-suggestion',
+                        hint: function(cm, data, completion) {
+                            const from = {line: cursor.line, ch: cursor.ch - currentWord.length};
+                            const to = {line: cursor.line, ch: cursor.ch};
+                            cm.replaceRange(completion.text, from, to);
+                        }
+                    })),
+                    from: CodeMirror.Pos(cursor.line, cursor.ch - currentWord.length),
+                    to: cursor
+                };
+
+                console.log('Returning hint result:', result);
+                return result;
             }
         }
     });
 
-    // Add event listeners
+    // Helper functions for autocompletion
+    function completeAfter(cm, pred) {
+        if (!pred || pred()) setTimeout(function() {
+            if (!cm.state.completionActive)
+                cm.showHint({completeSingle: false});
+        }, 100);
+        return CodeMirror.Pass;
+    }
+
+    function completeIfAfterLt(cm) {
+        return completeAfter(cm, function() {
+            var cur = cm.getCursor();
+            return cm.getRange(CodeMirror.Pos(cur.line, cur.ch - 1), cur) == "<";
+        });
+    }
+
+    function completeIfInClass(cm) {
+        return completeAfter(cm, function() {
+            var cur = cm.getCursor();
+            var token = cm.getTokenAt(cur);
+            var line = cm.getLine(cur.line);
+            const upToToken = line.slice(0, cur.ch);
+            return upToToken.match(/class\s*=\s*["'][^"']*/);
+        });
+    }
+
+    // Improve keyup event handler
     editor.on('keyup', function(cm, event) {
-        if (!/^[a-zA-Z0-9-]$/.test(event.key)) return;
+        // Trigger on space, letters, numbers, hyphen, colon, or equals
+        if (!/^[ a-zA-Z0-9-:=]$/.test(event.key)) return;
         
         const cursor = cm.getCursor();
-        const token = cm.getTokenAt(cursor);
         const line = cm.getLine(cursor.line);
         
-        if (line.includes('class=') || token.type === "string" || token.type === "attribute") {
+        // Check if we're in a class attribute
+        const upToToken = line.slice(0, cursor.ch);
+        if (upToToken.match(/class\s*=\s*["'][^"']*/)) {
             cm.showHint({ completeSingle: false });
         }
     });
