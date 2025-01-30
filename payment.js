@@ -29,7 +29,7 @@ const currentConfig = isLive ? stripeConfig.live : stripeConfig.test;
 const stripe = Stripe(currentConfig.publishableKey);
 
 // Configuration
-const VISIT_LIMIT = 1; // Configurable visit limit
+const VISIT_LIMIT = 100; // Configurable visit limit
 const TRIAL_EXTENSION = 10; // Number of additional trials when clicking "Later"
 const PAYMENT_STORAGE_KEY = 'visit_count';
 const PAYMENT_STATUS_KEY = 'has_donated';
