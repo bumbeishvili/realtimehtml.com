@@ -144,7 +144,7 @@ const modal = {
                 <div class="share-option">
                     <h3>Option 2: Quick Share (URL Compressed)</h3>
                     <p>Get an instantly shareable link with your code compressed into the URL (max 1200 lines).</p>
-                    <button id="compressedButton" class="share-button" onclick="modal.shareCode()">
+                    <button id="compressedButton" class="share-button" onclick="modal.shareCode(window.location.pathname.split('/').pop() || 'index.html')">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
                             <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/>
                         </svg>
@@ -304,13 +304,13 @@ const modal = {
         document.getElementById('shareModal').classList.remove('show');
     },
 
-    async shareCode() {
+    async shareCode(pageName = 'index.html') {
         const content = this.editor.getValue();
         try {
             if (typeof gtag === 'function') {
                 gtag('event', 'click', {
                     'event_category': 'Share',
-                    'event_label': 'Quick Share Button',
+                    'event_label': `Quick Share Button - ${pageName}`,
                     'value': 1
                 });
             }
