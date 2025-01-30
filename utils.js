@@ -126,6 +126,10 @@ const storage = {
 // Modal and share functionality
 const modal = {
     getModalHTML() {
+        // Get current path for the example URL
+        const currentPath = window.location.pathname;
+        const baseUrl = `${window.location.origin}${currentPath}`;
+        
         return `
         <div id="shareModal" class="modal" onclick="if(event.target === this) modal.hide()">
             <div class="modal-content">
@@ -138,7 +142,7 @@ const modal = {
                 
                 <div class="share-option">
                     <h3>Option 1: Share via GitHub Gist (Recommended)</h3>
-                    <p>Create a new Gist at <a href="https://gist.github.com" target="_blank" style="color: #7cb7ff;">gist.github.com</a>, paste your code, click "Raw" after saving, then add the raw URL to: <code style="background: #404040; padding: 2px 6px; border-radius: 4px;">realtimehtml.com#https://gist.githubusercontent.com/user/id/raw/...</code></p>
+                    <p>Create a new Gist at <a href="https://gist.github.com" target="_blank" style="color: #7cb7ff;">gist.github.com</a>, paste your code, click "Raw" after saving, then add the raw URL to: <code style="background: #404040; padding: 2px 6px; border-radius: 4px;">${baseUrl}#https://gist.githubusercontent.com/user/id/raw/...</code></p>
                 </div>
 
                 <div class="share-option">
@@ -155,8 +159,8 @@ const modal = {
                 <div class="share-option">
                     <h3>Option 3: Embed Code</h3>
                     <p>Add this HTML code to embed the editor in your website. You can test the embed code in this editor itself:</p>
-                    <div class="code-container" style="background: #404040; padding: 10px; border-radius: 4px; margin-bottom: 10px;">
-                        <code id="embedCode" style="color: #fff; display: block; white-space: pre-wrap; word-wrap: break-word; font-family: monospace; max-height: 200px; overflow-y: auto; overflow-x: auto; scrollbar-width: thin; scrollbar-color: #666 #404040; padding-right: 10px;"></code>
+                    <div class="code-container">
+                        <code id="embedCode"></code>
                     </div>
                     <button id="embedButton" class="share-button" onclick="modal.copyEmbedCode()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -275,6 +279,28 @@ const modal = {
                 font-weight: 400;
                 width: 100%;
             }
+
+            /* Embed code styles */
+            #shareModal .code-container {
+                background: #404040;
+                padding: 8px;
+                border-radius: 4px;
+                margin-bottom: 8px;
+            }
+
+            #shareModal .code-container #embedCode {
+                color: #fff;
+                display: block;
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                font-family: monospace;
+                max-height: 100px !important;
+                overflow-y: auto;
+                overflow-x: auto;
+                scrollbar-width: thin;
+                scrollbar-color: #666 #404040;
+                padding-right: 10px;
+            }
         `;
     },
 
@@ -315,8 +341,10 @@ const modal = {
                 });
             }
             
+            // Get the current page URL without hash
+            const baseUrl = window.location.href.split('#')[0];
             const encoded = btoa(unescape(encodeURIComponent(content)));
-            const shareUrl = `${window.location.origin}#code=${encoded}`;
+            const shareUrl = `${baseUrl}#code=${encoded}`;
             
             await clipboard.copy(shareUrl);
             const button = document.getElementById('compressedButton');
@@ -343,6 +371,30 @@ const modal = {
         if (!success) {
             alert('Failed to copy embed code. Please try again.');
         }
+    },
+
+    // Add this helper function to load code from URL or storage
+    loadInitialContent(defaultContent, storageKey) {
+        const hash = window.location.hash;
+        
+        // First try loading from URL hash
+        if (hash) {
+            if (hash.startsWith('#code=')) {
+                try {
+                    const encoded = hash.substring(6);
+                    const content = decodeURIComponent(escape(atob(encoded)));
+                    if (content) return content;
+                } catch (error) {
+                    console.error('Error loading shared code:', error);
+                }
+            } else if (hash.startsWith('#')) {
+                // For Gist URLs, return null to let the caller handle async loading
+                return null;
+            }
+        }
+        
+        // If no hash or failed to load from hash, try localStorage
+        return storage.load(storageKey, defaultContent);
     }
 };
 
