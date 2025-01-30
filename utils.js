@@ -5,7 +5,8 @@ const STORAGE_KEYS = {
     TAILWIND_EDITOR: 'tailwindcss_editor_code',
     REALTIME_HTML: 'realtimehtml_code',
     MARKDOWN_EDITOR: 'markdown_editor_code',
-    SVELTE_EDITOR: 'svelte_editor_code'
+    SVELTE_EDITOR: 'svelte_editor_code',
+    SHADER_EDITOR: 'shader_editor_code'
 };
 
 // Embed code utility functions
