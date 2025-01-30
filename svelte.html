@@ -44,6 +44,15 @@
     <!-- Add Storage Utils -->
     <script type="module" src="./utils.js"></script>
 
+    <!-- Global site tag (gtag.js) - Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7E9MWZLQHL"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-7E9MWZLQHL');
+    </script>
+
     <style>
         /* Base styles */
         :root {
@@ -51,6 +60,37 @@
             --modal-bg: #2d2d2d;
             --modal-hover: #3d3d3d;
             --transition-default: all 0.2s ease;
+        }
+
+        /* Share button styles */
+        #shareButton {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            width: 40px;
+            height: 40px;
+            background-color: var(--modal-bg);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-default);
+        }
+
+        #shareButton:hover {
+            background-color: var(--modal-hover);
+            box-shadow: 0 3px 7px rgba(0,0,0,0.3);
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        #shareButton:active {
+            transform: translateX(-50%) scale(0.95);
         }
 
         /* Editor styles */
@@ -93,7 +133,7 @@
     </style>
 
     <script type="module">
-        import { storage, STORAGE_KEYS, embed } from './utils.js';
+        import { storage, STORAGE_KEYS, embed, modal } from './utils.js';
 
         // Define default Svelte component
         const defaultStuff = `<script>
@@ -130,14 +170,23 @@
             let initialContent = defaultStuff;
             const hash = window.location.hash;
 
-            if (hash && hash.startsWith('#code=')) {
-                try {
-                    const encoded = hash.substring(6);
-                    const content = decodeURIComponent(escape(atob(encoded)));
-                    if (content) initialContent = content;
-                } catch (error) {
-                    console.error('Error loading shared code:', error);
+            // Try loading from URL first
+            if (hash && hash.startsWith('#')) {
+                if (hash.startsWith('#code=')) {
+                    initialContent = modal.loadInitialContent(defaultStuff, STORAGE_KEYS.SVELTE_EDITOR);
+                } else {
+                    // Handle Gist URLs
+                    const gistUrl = hash.substring(1);
+                    loadGistContent(gistUrl).then(content => {
+                        if (content) {
+                            editor.setValue(content);
+                            debouncedPreviewUpdate();
+                        }
+                    });
                 }
+            } else {
+                // Only load from storage if no URL hash is present
+                initialContent = storage.load(STORAGE_KEYS.SVELTE_EDITOR, defaultStuff);
             }
 
             // Initialize CodeMirror
@@ -163,6 +212,9 @@
             
             editor.focus();
             debouncedPreviewUpdate();
+
+            // Initialize modal with editor instance
+            modal.init(editor);
         }
 
         // Preview update function with Svelte compilation
@@ -264,6 +316,31 @@
             };
         }
 
+        // Gist loading function
+        async function loadGistContent(url) {
+            try {
+                // Convert github.com URLs to raw content URLs
+                if (url.includes('github.com/gist/') || url.includes('gist.github.com/')) {
+                    if (!url.includes('raw.githubusercontent.com') && !url.includes('/raw/')) {
+                        url = url.replace('gist.github.com/', 'gist.githubusercontent.com/')
+                             .replace('github.com/gist/', 'gist.githubusercontent.com/')
+                             .replace('/blob/', '/raw/');
+                        
+                        if (!url.endsWith('/raw')) {
+                            url = url + '/raw';
+                        }
+                    }
+                }
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to fetch Gist');
+                return await response.text();
+            } catch (error) {
+                console.error('Error loading gist:', error);
+                return null;
+            }
+        }
+
         // Initialize on load
         window.addEventListener('load', () => {
             // Initialize Split.js
@@ -288,6 +365,12 @@
     </script>
 </head>
 <body style="margin: 0; padding: 0; overflow: hidden;">
+    <button id="shareButton" onclick="modal.show(); gtag('event', 'click', {'event_category': 'Share', 'event_label': 'Share Icon Button - svelte.html', 'value': 1});" title="Share code">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" fill="currentColor"/>
+        </svg>
+    </button>
+
     <div class="split">
         <div class="split-panel" id="left-panel">
             <div id="editor"></div>
