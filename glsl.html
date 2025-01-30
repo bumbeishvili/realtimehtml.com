@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <title>GLSL Shader Editor - Live Fragment Shader Preview with Shadertoy Compatibility</title>
+
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" 
+        content="Free online GLSL fragment shader editor with instant live preview. Write and test shaders in real-time with Shadertoy compatibility. Perfect for Three.js developers, shader artists, and creative coding.">
+    <meta name="author" content="realtimehtml.com">
+    <meta name="keywords" 
+        content="GLSL editor, fragment shader, Shadertoy compatible, Three.js, WebGL2, shader editor, live preview, real-time shader, graphics programming, creative coding, shader art, WebGL">
+    <meta name="robots" content="index, follow">
+    <meta name="googlebot" content="index, follow">
+    <meta name="google" content="nositelinkssearchbox">
+    <meta name="google" content="notranslate">
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://realtimehtml.com/glsl">
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://realtimehtml.com/glsl">
+    <meta property="og:title" content="GLSL Shader Editor - Live Fragment Shader Preview">
+    <meta property="og:description" 
+        content="Free online GLSL fragment shader editor with instant live preview. Write and test shaders in real-time with Shadertoy compatibility. Perfect for Three.js developers, shader artists, and creative coding.">
+    <meta property="og:image" content="https://realtimehtml.com/preview.svg">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:image:alt" content="Real-time GLSL Shader Editor interface showing editor and live preview">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://realtimehtml.com/glsl">
+    <meta property="twitter:title" content="GLSL Shader Editor - Live Fragment Shader Preview">
+    <meta property="twitter:description" 
+        content="Free online GLSL fragment shader editor with instant live preview. Write and test shaders in real-time with Shadertoy compatibility. Perfect for Three.js developers, shader artists, and creative coding.">
+    <meta property="twitter:image" content="https://realtimehtml.com/preview.svg">
+    <meta property="twitter:image:alt" content="Real-time GLSL Shader Editor interface showing editor and live preview">
+
+    <!-- Favicon -->
+    <link rel="icon" href="./vector.png">
+    <link rel="apple-touch-icon" href="./vector.png">
+
+    <!-- Preload critical resources -->
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css" as="style">
+    <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js" as="script">
+
+    <!-- Add CodeMirror CSS and JavaScript -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
+    <link rel="stylesheet" href="./scrollbar.css">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/clike/clike.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/xml/xml.min.js"></script>
+    <script defer
+        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/javascript/javascript.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/css/css.min.js"></script>
+    <script defer
+        src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/htmlmixed/htmlmixed.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/addon/mode/overlay.min.js"></script>
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/mode/gfm/gfm.min.js"></script>
+
+    <!-- Add Storage Utils -->
+    <script type="module" src="./utils.js"></script>
+
+    <!-- Add Stripe -->
+    <script src="https://js.stripe.com/v3/"></script>
+
+    <!-- Add Payment Integration -->
+    <script type="module" src="./payment.js"></script>
+
+    <!-- Add Split.js -->
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/split.js/1.6.5/split.min.js"></script>
+
+    <!-- Add Marked.js for Markdown parsing -->
+    <script defer src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <!-- Add highlight.js for syntax highlighting -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/github-dark.min.css">
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "GLSL Shader Editor",
+      "url": "https://realtimehtml.com/glsl",
+      "description": "Free online GLSL fragment shader editor with instant live preview. Write and test shaders in real-time with Shadertoy compatibility.",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Real-time shader preview",
+        "Shadertoy compatibility",
+        "Three.js export",
+        "WebGL2 support",
+        "Split view editor",
+        "Mobile responsive",
+        "Code sharing",
+        "Dark theme"
+      ],
+      "screenshot": "https://realtimehtml.com/glsl-preview.png",
+      "softwareVersion": "1.0",
+      "author": {
+        "@type": "Organization",
+        "name": "realtimehtml.com"
+      },
+      "keywords": "GLSL editor, fragment shader, Shadertoy, Three.js, WebGL2, shader programming"
+    }
+    </script>
+
+    <style>
+        /* Base styles */
+        :root {
+            --system-fonts: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+            --modal-bg: #2d2d2d;
+            --modal-hover: #3d3d3d;
+            --transition-default: all 0.2s ease;
+        }
+
+        /* Editor styles */
+        .CodeMirror {
+            height: 100vh;
+            font-size: 14px;
+            font-family: 'Menlo', 'Monaco', 'Courier New', monospace;
+        }
+
+        /* Split panel styles */
+        .split {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .split-panel {
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        #editor {
+            min-width: 0;
+        }
+
+        /* Preview styles */
+        #preview {
+            position: relative;
+            background: #1e1e1e;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Canvas styling */
+        #canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* Error display styling */
+        #error-display {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: rgba(255, 0, 0, 0.8);
+            color: white;
+            padding: 10px;
+            font-family: monospace;
+            display: none;
+            z-index: 1000;
+        }
+
+        /* Remove unnecessary preview styles */
+        #preview h1,
+        #preview h2,
+        #preview h3,
+        #preview h4,
+        #preview h5,
+        #preview h6,
+        #preview p,
+        #preview ul,
+        #preview ol,
+        #preview code,
+        #preview pre code,
+        #preview a,
+        #preview blockquote,
+        #preview img,
+        #preview table {
+            display: none;
+        }
+
+        /* Gutter styles */
+        .gutter {
+            background-color: #333;
+            background-repeat: no-repeat;
+            background-position: 50%;
+        }
+
+        .gutter:hover {
+            background-color: #444;
+        }
+
+        .gutter.gutter-horizontal {
+            cursor: col-resize;
+            width: 10px;
+        }
+
+        /* Share button styles */
+        #shareButton {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10000;
+            width: 40px;
+            height: 40px;
+            background-color: var(--modal-bg);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-default);
+        }
+
+        #shareButton:hover {
+            background-color: var(--modal-hover);
+            box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+            transform: translateX(-50%) scale(1.05);
+        }
+
+        #shareButton:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+
+        /* Modal styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            z-index: 10001;
+            opacity: 0;
+            transition: var(--transition-default);
+            font-family: var(--system-fonts);
+        }
+
+        .modal.show {
+            display: flex;
+            opacity: 1;
+        }
+
+        .modal-content {
+            position: relative;
+            background: var(--modal-bg);
+            margin: auto;
+            padding: 20px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-content h2 {
+            font-family: var(--system-fonts);
+            font-weight: 600;
+            font-size: 20px;
+            letter-spacing: -0.01em;
+            margin-top: 0;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            color: #999;
+            cursor: pointer;
+            padding: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: var(--transition-default);
+        }
+
+        .modal-close:hover {
+            background: rgba(255, 255, 255, 0.1);
+            color: #fff;
+        }
+
+        /* Share options */
+        .share-option {
+            background: #363636;
+            padding: 15px;
+            margin: 10px 0;
+            border-radius: 6px;
+            transition: var(--transition-default);
+        }
+
+        .share-option:hover {
+            background: #404040;
+        }
+
+        .share-option h3 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+            color: #fff;
+            font-weight: 500;
+        }
+
+        .share-option p {
+            margin: 0 0 12px 0;
+            color: #bbb;
+            font-size: 14px;
+            line-height: 1.5;
+            font-weight: 400;
+        }
+
+        .share-button {
+            font-family: var(--system-fonts);
+            font-weight: 500;
+            background: #4a4a4a;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: var(--transition-default);
+        }
+
+        .share-button:hover {
+            background: #555;
+        }
+
+        /* Add download button styles */
+        #downloadButton {
+            display: flex;
+            display: none;
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 10000;
+            width: 40px;
+            height: 40px;
+            background-color: var(--modal-bg);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition-default);
+        }
+
+        #downloadButton:hover {
+            background-color: var(--modal-hover);
+            box-shadow: 0 3px 7px rgba(0, 0, 0, 0.3);
+            transform: scale(1.05);
+        }
+
+        #downloadButton:active {
+            transform: scale(0.95);
+        }
+
+        /* Tooltip styles */
+        #downloadButton::after {
+            content: 'Download three.js port';
+            position: absolute;
+            bottom: 100%;
+            right: 0;
+            margin-bottom: 10px;
+            padding: 7px 10px;
+            background: var(--modal-bg);
+            color: white;
+            font-size: 12px;
+            border-radius: 4px;
+            white-space: nowrap;
+            visibility: hidden;
+            opacity: 0;
+            transition: var(--transition-default);
+        }
+
+        #downloadButton:hover::after {
+            visibility: visible;
+            opacity: 1;
+        }
+    </style>
+
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag() { dataLayer.push(arguments); }
+        gtag('js', new Date());
+
+        gtag('config', 'G-7E9MWZLQHL');
+    </script>
+
+    <script type="module">
+        import { storage, STORAGE_KEYS, embed, modal } from './utils.js';
+
+        const defaultShader = `#version 300 es
+precision highp float;
+precision highp int;
+
+uniform vec3      iResolution;           // viewport resolution (in pixels)
+uniform float     iTime;                 // shader playback time (in seconds)
+uniform float     iTimeDelta;            // render time (in seconds)
+uniform float     iFrameRate;            // shader frame rate
+uniform int       iFrame;                // shader playback frame
+uniform float     iChannelTime[4];       // channel playback time (in seconds)
+uniform vec3      iChannelResolution[4]; // channel resolution (in pixels)
+uniform vec4      iMouse;                // mouse pixel coords. xy: current (if MLB down), zw: click
+uniform vec4      iDate;                 // (year, month, day, time in seconds)
+out vec4 fragColor;
+
+
+/* ---- 
+* To port examples from Shadertoy, just replace mainImage function bellow with content copied from Shadertoy 
+* ----
+*/
+
+
+void mainImage( out vec4 fragColor, in vec2 fragCoord )
+{
+    // Normalized pixel coordinates (from 0 to 1)
+    vec2 uv = fragCoord/iResolution.xy;
+
+    // Time varying pixel color
+    vec3 col = 0.5 + 0.5*cos(iTime+uv.xyx+vec3(0,2,4));
+
+    // Output to screen
+    fragColor = vec4(col,1.0);
+}
+
+
+// ---- How to port shaders from Shadertoy ----
+
+
+void main() {
+    mainImage(fragColor, gl_FragCoord.xy);
+}`;
+
+        let editor;
+        let gl;
+        let program;
+        let canvas;
+        let animationFrameId;
+        let startTime;
+        let lastTime;
+        let mousePosition = { x: 0, y: 0, z: 0, w: 0 };
+        let errorDisplay;
+
+        function initGL() {
+            canvas = document.createElement('canvas');
+            canvas.id = 'canvas';
+            document.getElementById('preview').appendChild(canvas);
+
+            errorDisplay = document.createElement('div');
+            errorDisplay.id = 'error-display';
+            document.getElementById('preview').appendChild(errorDisplay);
+
+            gl = canvas.getContext('webgl2');
+            if (!gl) {
+                throw new Error('WebGL2 not supported');
+            }
+
+            // Add mouse event listeners
+            canvas.addEventListener('mousemove', (e) => {
+                const rect = canvas.getBoundingClientRect();
+                mousePosition.x = e.clientX - rect.left;
+                mousePosition.y = rect.height - (e.clientY - rect.top);
+                if (e.buttons & 1) { // Left mouse button
+                    mousePosition.z = mousePosition.x;
+                    mousePosition.w = mousePosition.y;
+                }
+            });
+
+            canvas.addEventListener('mousedown', (e) => {
+                if (e.button === 0) { // Left mouse button
+                    const rect = canvas.getBoundingClientRect();
+                    mousePosition.z = e.clientX - rect.left;
+                    mousePosition.w = rect.height - (e.clientY - rect.top);
+                }
+            });
+
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+        }
+
+        function resizeCanvas() {
+            if (canvas && canvas.parentElement) {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.parentElement.clientHeight;
+                gl.viewport(0, 0, canvas.width, canvas.height);
+            }
+        }
+
+        function createShader(type, source) {
+            const shader = gl.createShader(type);
+            gl.shaderSource(shader, source);
+            gl.compileShader(shader);
+
+            if (!gl.getShaderParameter(shader, gl.COMPILE_STATUS)) {
+                const error = gl.getShaderInfoLog(shader);
+                gl.deleteShader(shader);
+                throw new Error(error);
+            }
+
+            return shader;
+        }
+
+        const vertexShaderSource = `#version 300 es
+in vec4 position;
+void main() {
+    gl_Position = position;
+}`;
+
+        function compileShader(fragmentShaderSource) {
+            // Create program
+            const vertexShader = createShader(gl.VERTEX_SHADER, vertexShaderSource);
+            const fragmentShader = createShader(gl.FRAGMENT_SHADER, fragmentShaderSource);
+
+            const newProgram = gl.createProgram();
+            gl.attachShader(newProgram, vertexShader);
+            gl.attachShader(newProgram, fragmentShader);
+            gl.linkProgram(newProgram);
+
+            if (!gl.getProgramParameter(newProgram, gl.LINK_STATUS)) {
+                const error = gl.getProgramInfoLog(newProgram);
+                gl.deleteProgram(newProgram);
+                throw new Error(error);
+            }
+
+            // Clean up old program if it exists
+            if (program) {
+                gl.deleteProgram(program);
+            }
+            program = newProgram;
+
+            // Create position buffer
+            const positions = new Float32Array([
+                -1, -1,
+                1, -1,
+                -1, 1,
+                1, 1,
+            ]);
+
+            const positionBuffer = gl.createBuffer();
+            gl.bindBuffer(gl.ARRAY_BUFFER, positionBuffer);
+            gl.bufferData(gl.ARRAY_BUFFER, positions, gl.STATIC_DRAW);
+
+            // Set up vertex attributes
+            const positionAttributeLocation = gl.getAttribLocation(program, 'position');
+            gl.enableVertexAttribArray(positionAttributeLocation);
+            gl.vertexAttribPointer(positionAttributeLocation, 2, gl.FLOAT, false, 0, 0);
+        }
+
+        function render(time) {
+            if (!startTime) startTime = time;
+            if (!lastTime) lastTime = time;
+
+            const currentTime = (time - startTime) * 0.001; // Convert to seconds
+            const deltaTime = (time - lastTime) * 0.001;
+            lastTime = time;
+
+            gl.useProgram(program);
+
+            // Set uniforms
+            const uniforms = {
+                iResolution: gl.getUniformLocation(program, 'iResolution'),
+                iTime: gl.getUniformLocation(program, 'iTime'),
+                iTimeDelta: gl.getUniformLocation(program, 'iTimeDelta'),
+                iFrame: gl.getUniformLocation(program, 'iFrame'),
+                iFrameRate: gl.getUniformLocation(program, 'iFrameRate'),
+                iMouse: gl.getUniformLocation(program, 'iMouse'),
+                iDate: gl.getUniformLocation(program, 'iDate'),
+            };
+
+            const date = new Date();
+            gl.uniform3f(uniforms.iResolution, canvas.width, canvas.height, 1.0);
+            gl.uniform1f(uniforms.iTime, currentTime);
+            gl.uniform1f(uniforms.iTimeDelta, deltaTime);
+            gl.uniform1i(uniforms.iFrame, Math.floor(currentTime * 60));
+            gl.uniform1f(uniforms.iFrameRate, 1.0 / deltaTime);
+            gl.uniform4f(uniforms.iMouse, mousePosition.x, mousePosition.y, mousePosition.z, mousePosition.w);
+            gl.uniform4f(uniforms.iDate, date.getFullYear(), date.getMonth(), date.getDate(),
+                date.getHours() * 3600 + date.getMinutes() * 60 + date.getSeconds());
+
+            // Draw
+            gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+
+            animationFrameId = requestAnimationFrame(render);
+        }
+
+        // Add debounce function before init()
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+
+        // Initialize editor
+        async function init() {
+            let initialContent = defaultShader;
+            const hash = window.location.hash;
+
+            // Try loading from URL first
+            if (hash && hash.startsWith('#')) {
+                if (hash.startsWith('#code=')) {
+                    initialContent = modal.loadInitialContent(defaultShader, STORAGE_KEYS.SHADER_EDITOR);
+                } else {
+                    // Handle Gist URLs
+                    const gistUrl = hash.substring(1);
+                    const content = await loadGistContent(gistUrl);
+                    if (content) initialContent = content;
+                }
+            } else {
+                // Only load from storage if no URL hash is present
+                initialContent = storage.load(STORAGE_KEYS.SHADER_EDITOR, defaultShader);
+            }
+
+            editor = CodeMirror(document.querySelector('#editor'), {
+                value: initialContent,
+                mode: 'x-shader/x-fragment',
+                theme: 'dracula',
+                lineNumbers: true,
+                lineWrapping: true,
+                viewportMargin: Infinity,
+                tabSize: 2,
+                indentUnit: 2,
+                autofocus: true
+            });
+
+            // Initialize WebGL
+            initGL();
+
+            // Initialize modal with editor instance
+            modal.init(editor);
+
+            // Add shader compilation on change
+            editor.on('change', debounce((cm) => {
+                const content = cm.getValue();
+                storage.save(STORAGE_KEYS.SHADER_EDITOR, content, defaultShader);
+
+                try {
+                    compileShader(content);
+                    errorDisplay.style.display = 'none';
+                    if (!animationFrameId) {
+                        startTime = null;
+                        lastTime = null;
+                        animationFrameId = requestAnimationFrame(render);
+                    }
+                } catch (error) {
+                    errorDisplay.textContent = error.message;
+                    errorDisplay.style.display = 'block';
+                }
+            }, 300));
+
+            // Initial compilation
+            try {
+                compileShader(initialContent);
+                animationFrameId = requestAnimationFrame(render);
+            } catch (error) {
+                errorDisplay.textContent = error.message;
+                errorDisplay.style.display = 'block';
+            }
+        }
+
+        // Add Gist loading function
+        async function loadGistContent(url) {
+            try {
+                // Convert github.com URLs to raw content URLs
+                if (url.includes('github.com/gist/') || url.includes('gist.github.com/')) {
+                    // If it's not already a raw URL, convert it
+                    if (!url.includes('raw.githubusercontent.com') && !url.includes('/raw/')) {
+                        // Handle both full and shortened URLs
+                        url = url.replace('gist.github.com/', 'gist.githubusercontent.com/')
+                            .replace('github.com/gist/', 'gist.githubusercontent.com/')
+                            .replace('/blob/', '/raw/');
+
+                        // If URL doesn't end with /raw, add it
+                        if (!url.endsWith('/raw')) {
+                            url = url + '/raw';
+                        }
+                    }
+                }
+
+                const response = await fetch(url);
+                if (!response.ok) throw new Error('Failed to fetch Gist');
+                return await response.text();
+            } catch (error) {
+                console.error('Error loading gist:', error);
+                return null;
+            }
+        }
+
+        // Move window.onload inside module
+        window.addEventListener('load', function () {
+            Split(['#left-panel', '#right-panel'], {
+                sizes: [50, 50],
+                minSize: [200, 200],
+                gutterSize: 10,
+                dragInterval: 1,
+                snapOffset: 0,
+                elementStyle: (dimension, size, gutterSize) => ({
+                    'flex-basis': `calc(${size}% - ${gutterSize}px)`,
+                }),
+                gutterStyle: (dimension, gutterSize) => ({
+                    'flex-basis': `${gutterSize}px`,
+                }),
+                onDrag: () => editor.refresh()
+            });
+            init();
+        });
+    </script>
+</head>
+
+<body style="margin: 0; padding: 0; overflow: hidden;">
+    <button id="shareButton"
+        onclick="modal.show(); gtag('event', 'click', {'event_category': 'Share', 'event_label': 'Share Icon Button - glsl.html', 'value': 1});"
+        title="Share code">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path
+                d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"
+                fill="currentColor" />
+        </svg>
+    </button>
+
+    <div class="split">
+        <div class="split-panel" id="left-panel">
+            <div id="editor"></div>
+        </div>
+        <div class="gutter"></div>
+        <div class="split-panel" id="right-panel">
+            <div id="preview"></div>
+        </div>
+    </div>
+
+    <!-- Add the download button to the body, just before the closing body tag -->
+    <button id="downloadButton" title="Download three.js port">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" fill="currentColor" />
+        </svg>
+    </button>
+</body>
+
+</html>
