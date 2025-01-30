@@ -232,139 +232,6 @@ li.CodeMirror-hint-active {
 #shareButton:active {
     transform: translateX(-50%) scale(0.95);
 }
-
-/* Modal styles */
-.modal {
-    display: none;
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0, 0, 0, 0.5);
-    z-index: 10001;
-    opacity: 0;
-    transition: var(--transition-default);
-    font-family: var(--system-fonts);
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-}
-
-.modal.show {
-    display: flex;
-    opacity: 1;
-}
-
-.modal-content {
-    position: relative;
-    background: var(--modal-bg);
-    margin: auto;
-    padding: 20px;
-    border-radius: 8px;
-    width: 90%;
-    max-width: 600px;
-    color: #fff;
-    box-shadow: 0 4px 20px rgba(0,0,0,0.3);
-}
-
-.modal-content h2 {
-    font-family: var(--system-fonts);
-    font-weight: 600;
-    font-size: 20px;
-    letter-spacing: -0.01em;
-    margin-top: 0;
-}
-
-.modal-close {
-    position: absolute;
-    top: 15px;
-    right: 15px;
-    background: none;
-    border: none;
-    color: #999;
-    cursor: pointer;
-    padding: 5px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-radius: 50%;
-    transition: var(--transition-default);
-}
-
-.modal-close:hover {
-    background: rgba(255,255,255,0.1);
-    color: #fff;
-}
-
-/* Share options */
-.share-option {
-    background: #363636;
-    padding: 15px;
-    margin: 10px 0;
-    border-radius: 6px;
-    transition: var(--transition-default);
-}
-
-.share-option:hover {
-    background: #404040;
-}
-
-.share-option h3 {
-    margin: 0 0 8px 0;
-    font-size: 16px;
-    color: #fff;
-    font-weight: 500;
-}
-
-.share-option p {
-    margin: 0 0 12px 0;
-    color: #bbb;
-    font-size: 14px;
-    line-height: 1.5;
-    font-weight: 400;
-}
-
-.share-button {
-    font-family: var(--system-fonts);
-    font-weight: 500;
-    background: #4a4a4a;
-    color: white;
-    border: none;
-    padding: 8px 16px;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 14px;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    transition: var(--transition-default);
-}
-
-.share-button:hover {
-    background: #555;
-}
-
-/* Embed code styles */
-#shareModal .code-container {
-    background: #404040;
-    padding: 8px;
-    border-radius: 4px;
-    margin-bottom: 8px;
-}
-
-#shareModal .code-container #embedCode {
-    color: #fff;
-    display: block;
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    font-family: monospace;
-    max-height: 100px !important;
-    overflow-y: auto;
-    overflow-x: auto;
-    scrollbar-width: thin;
-    scrollbar-color: #666 #404040;
-    padding-right: 10px;
-}
 </style>
 
 <script>
@@ -376,33 +243,7 @@ li.CodeMirror-hint-active {
 </script>
 
 <script type="module">
-import { storage, STORAGE_KEYS, embed } from './utils.js';
-
-// Modal functions
-const modal = {
-    show() {
-        document.getElementById('shareModal').classList.add('show');
-        // Update embed code preview
-        document.getElementById('embedCode').textContent = embed.getCode(editor);
-    },
-    
-    hide() {
-        document.getElementById('shareModal').classList.remove('show');
-    }
-};
-
-// Add copyEmbedCode function
-async function copyEmbedCode() {
-    const success = await embed.copyCode(editor);
-    if (!success) {
-        alert('Failed to copy embed code. Please try again.');
-    }
-}
-
-// Make functions globally available
-window.modal = modal;
-window.shareCode = shareCode;
-window.copyEmbedCode = copyEmbedCode;
+import { storage, STORAGE_KEYS, embed, modal } from './utils.js';
 
 // Define Tailwind classes for autocompletion
 const tailwindClasses = [
@@ -523,16 +364,12 @@ function init() {
     let initialContent = defaultStuff;
     const hash = window.location.hash;
 
-    if (hash) {
+    // Try loading from URL first
+    if (hash && hash.startsWith('#')) {
         if (hash.startsWith('#code=')) {
-            try {
-                const encoded = hash.substring(6);
-                const content = decodeURIComponent(escape(atob(encoded)));
-                if (content) initialContent = content;
-            } catch (error) {
-                console.error('Error loading shared code:', error);
-            }
-        } else if (hash.startsWith('#')) {
+            initialContent = modal.loadInitialContent(defaultStuff, STORAGE_KEYS.TAILWIND_EDITOR);
+        } else {
+            // Handle Gist URLs
             const gistUrl = hash.substring(1);
             loadGistContent(gistUrl).then(content => {
                 if (content) {
@@ -542,6 +379,7 @@ function init() {
             });
         }
     } else {
+        // Only load from storage if no URL hash is present
         initialContent = storage.load(STORAGE_KEYS.TAILWIND_EDITOR, defaultStuff);
     }
 
@@ -694,6 +532,9 @@ function init() {
     editor.execCommand('selectAll');
     
     debouncedPreviewUpdate();
+
+    // Initialize modal with editor instance
+    modal.init(editor);
 }
 
 // Gist loading function
@@ -721,61 +562,6 @@ async function loadGistContent(url) {
     } catch (error) {
         console.error('Error loading gist:', error);
         return null;
-    }
-}
-
-// Clipboard functions
-const clipboard = {
-    async copy(text) {
-        if (navigator.clipboard && window.isSecureContext) {
-            return navigator.clipboard.writeText(text);
-        }
-        
-        // Fallback for browsers without clipboard API
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        
-        try {
-            document.execCommand('copy');
-            return Promise.resolve();
-        } catch (err) {
-            console.error('Failed to copy URL:', err);
-            return Promise.reject(err);
-        } finally {
-            document.body.removeChild(textarea);
-        }
-    }
-};
-
-// Share functionality
-async function shareCode() {
-    const content = editor.getValue();
-    try {
-        // Track share button click
-        gtag('event', 'click', {
-            'event_category': 'Share',
-            'event_label': 'Quick Share Button - tailwind.html',
-            'value': 1
-        });
-        
-        const encoded = btoa(unescape(encodeURIComponent(content)));
-        const baseUrl = window.location.href.split('#')[0];  // Get full URL path without hash
-        const shareUrl = `${baseUrl}#code=${encoded}`;
-        
-        await clipboard.copy(shareUrl);
-        const button = document.getElementById('compressedButton');
-        button.textContent = 'Copied!';
-        
-        setTimeout(() => {
-            button.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/></svg>Copy compressed URL';
-        }, 2000);
-    } catch (error) {
-        console.error('Error sharing code:', error);
-        alert('Could not automatically copy the URL. Here it is to copy manually:\n\n' + shareUrl);
     }
 }
 
@@ -898,57 +684,6 @@ window.addEventListener('load', function() {
             <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" fill="currentColor"/>
         </svg>
     </button>
-
-    <!-- Share Modal -->
-    <div id="shareModal" class="modal" onclick="if(event.target === this) modal.hide()">
-        <div class="modal-content">
-            <button class="modal-close" onclick="modal.hide()">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" fill="currentColor"/>
-                </svg>
-            </button>
-            <h2 style="margin-top: 0;">Share Your Code</h2>
-            
-            <div class="share-option">
-                <h3>Option 1: Share via GitHub Gist (Recommended)</h3>
-                <p>Create a new Gist at <a href="https://gist.github.com" target="_blank" style="color: #7cb7ff;">gist.github.com</a>, paste your code,<br>
-                   click "Raw" after saving, then add the raw URL to:<br>
-                   <code style="background: #404040; padding: 2px 6px; border-radius: 4px;">realtimehtml.com/tailwind#</code></p>
-            </div>
-
-            <div class="share-option">
-                <h3>Option 2: Quick Share (URL Compressed)</h3>
-                <p>Get an instantly shareable link with your code compressed into the URL (max 1200 lines).</p>
-                <button id="compressedButton" class="share-button" onclick="shareCode()">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/>
-                    </svg>
-                    Copy compressed URL
-                </button>
-            </div>
-
-            <div class="share-option">
-                <h3>Option 3: Embed Code</h3>
-                <p>Add this HTML code to embed the Tailwind editor in your website. You can test the embed code in this editor itself:</p>
-                <div class="code-container">
-                    <code id="embedCode">
-                        <style>
-                            #embedCode::-webkit-scrollbar { width: 8px; height: 8px; }
-                            #embedCode::-webkit-scrollbar-track { background: #404040; border-radius: 4px; }
-                            #embedCode::-webkit-scrollbar-thumb { background: #666; border-radius: 4px; border: 2px solid #404040; }
-                            #embedCode::-webkit-scrollbar-thumb:hover { background: #777; }
-                        </style>
-                    </code>
-                </div>
-                <button id="embedButton" class="share-button" onclick="copyEmbedCode(); gtag('event', 'click', {'event_category': 'Share', 'event_label': 'Embed Code Button - tailwind.html', 'value': 1});">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/>
-                    </svg>
-                    Copy embed code
-                </button>
-            </div>
-        </div>
-    </div>
 
     <div class="split">
         <div class="split-panel" id="left-panel">
