@@ -4,7 +4,8 @@ const STORAGE_KEYS = {
     PAYMENT_STATUS: 'has_donated',
     TAILWIND_EDITOR: 'tailwindcss_editor_code',
     REALTIME_HTML: 'realtimehtml_code',
-    MARKDOWN_EDITOR: 'markdown_editor_code'
+    MARKDOWN_EDITOR: 'markdown_editor_code',
+    SVELTE_EDITOR: 'svelte_editor_code'
 };
 
 // Embed code utility functions

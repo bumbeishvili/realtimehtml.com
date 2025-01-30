@@ -37,6 +37,41 @@
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://realtimehtml.com/svelte">
 
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebApplication",
+      "name": "Svelte Playground",
+      "url": "https://realtimehtml.com/svelte",
+      "description": "Free online Svelte playground and editor with real-time preview, Tailwind CSS integration, and instant component development. Perfect for prototyping, learning Svelte, and building UI components.",
+      "applicationCategory": "DeveloperApplication",
+      "operatingSystem": "Any",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "featureList": [
+        "Real-time Svelte preview",
+        "Tailwind CSS integration",
+        "Component development",
+        "Split view editor",
+        "Mobile responsive",
+        "Auto-completion",
+        "Code sharing",
+        "Error handling"
+      ],
+      "screenshot": "https://realtimehtml.com/preview.svg",
+      "softwareVersion": "3.0",
+      "author": {
+        "@type": "Organization",
+        "name": "realtimehtml.com"
+      },
+      "keywords": "Svelte, code editor, live preview, UI components, web development, Tailwind CSS"
+    }
+    </script>
+
     <!-- Add CodeMirror CSS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/codemirror.min.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.2/theme/dracula.min.css">
@@ -63,6 +98,12 @@
 
     <!-- Add Storage Utils -->
     <script type="module" src="./utils.js"></script>
+
+    <!-- Add Stripe -->
+    <script src="https://js.stripe.com/v3/"></script>
+
+    <!-- Add Payment Integration -->
+    <script type="module" src="./payment.js"></script>
 
     <!-- Global site tag (gtag.js) - Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-7E9MWZLQHL"></script>
@@ -227,7 +268,7 @@
             editor.on('change', (cm) => {
                 debouncedPreviewUpdate();
                 const content = cm.getValue();
-                storage.save(STORAGE_KEYS.TAILWIND_EDITOR, content, defaultStuff);
+                storage.save(STORAGE_KEYS.SVELTE_EDITOR, content, defaultStuff);
             });
             
             editor.focus();
@@ -396,7 +437,9 @@
             <div id="editor"></div>
         </div>
         <div class="gutter"></div>
-        <div class="split-panel" id="right-panel"></div>
+        <div class="split-panel" id="right-panel">
+            <iframe id="preview" sandbox="allow-scripts allow-same-origin allow-modals allow-forms allow-popups" style="width: 100%; height: 100%; border: none;"></iframe>
+        </div>
     </div>
 </body>
 </html>
