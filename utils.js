@@ -309,14 +309,15 @@ const modal = {
     init(editor) {
         this.editor = editor;
         
-        // Add modal HTML to body
+        // Add both modals HTML to body
         const modalDiv = document.createElement('div');
-        modalDiv.innerHTML = this.getModalHTML();
+        modalDiv.innerHTML = this.getModalHTML() + this.getInfoModalHTML();
         document.body.appendChild(modalDiv.firstElementChild);
+        document.body.appendChild(modalDiv.lastElementChild);
         
         // Add styles
         const styleSheet = document.createElement('style');
-        styleSheet.textContent = this.getModalStyles();
+        styleSheet.textContent = this.getModalStyles() + this.getInfoModalStyles();
         document.head.appendChild(styleSheet);
         
         // Make modal methods globally available
@@ -397,6 +398,128 @@ const modal = {
         
         // If no hash or failed to load from hash, try localStorage
         return storage.load(storageKey, defaultContent);
+    },
+
+    getInfoModalHTML() {
+        return `
+        <div id="infoModal" class="modal" onclick="if(event.target === this) modal.hideInfo()">
+            <div class="modal-content">
+                <button class="modal-close" onclick="modal.hideInfo()" title="Close">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 10.586L16.95 5.636L18.364 7.05L13.414 12L18.364 16.95L16.95 18.364L12 13.414L7.05 18.364L5.636 16.95L10.586 12L5.636 7.05L7.05 5.636L12 10.586Z" fill="currentColor"/>
+                    </svg>
+                </button>
+                <h2>Available Editors</h2>
+                <div class="editors-grid">
+                    <a href="/index.html" class="editor-card">
+                        <h3>HTML/CSS/JS</h3>
+                        <p>Real-time HTML, CSS, and JavaScript editor with live preview</p>
+                    </a>
+                    <a href="/svelte.html" class="editor-card">
+                        <h3>Svelte</h3>
+                        <p>Svelte component editor with Tailwind CSS support</p>
+                    </a>
+                    <a href="/markdown.html" class="editor-card">
+                        <h3>Markdown</h3>
+                        <p>Markdown editor with instant preview and GitHub flavor</p>
+                    </a>
+                    <a href="/glsl.html" class="editor-card">
+                        <h3>GLSL Shader</h3>
+                        <p>WebGL shader editor with Shadertoy compatibility</p>
+                    </a>
+                    <a href="/tailwind.html" class="editor-card">
+                        <h3>Tailwind CSS</h3>
+                        <p>Tailwind CSS playground with class suggestions</p>
+                    </a>
+                </div>
+                <div class="support-info">
+                    <p>For payment-related issues or refund requests, please contact <a href="mailto:me@davidb.dev">me@davidb.dev</a></p>
+                </div>
+            </div>
+        </div>`;
+    },
+
+    getInfoModalStyles() {
+        return `
+            .editors-grid {
+                display: grid;
+                grid-template-columns: repeat(3, 1fr);
+                gap: 15px;
+                margin-top: 20px;
+            }
+            
+            .editor-card {
+                background: #363636;
+                padding: 15px;
+                border-radius: 6px;
+                text-decoration: none;
+                color: white;
+                transition: all 0.2s ease;
+                min-width: 200px;
+            }
+            
+            @media (max-width: 900px) {
+                .editors-grid {
+                    grid-template-columns: repeat(2, 1fr);
+                }
+            }
+            
+            @media (max-width: 600px) {
+                .editors-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+            
+            .editor-card:hover {
+                background: #404040;
+                transform: translateY(-2px);
+            }
+            
+            .editor-card h3 {
+                margin: 0 0 8px 0;
+                font-size: 18px;
+                color: #fff;
+            }
+            
+            .editor-card p {
+                margin: 0;
+                font-size: 14px;
+                color: #bbb;
+                line-height: 1.4;
+            }
+
+            .support-info {
+                margin-top: 20px;
+                padding-top: 15px;
+                border-top: 1px solid #444;
+                text-align: center;
+            }
+
+            .support-info p {
+                color: #bbb;
+                font-size: 14px;
+                margin: 0;
+            }
+
+            .support-info a {
+                color: #7cb7ff;
+                text-decoration: none;
+                transition: color 0.2s ease;
+            }
+
+            .support-info a:hover {
+                color: #9ccaff;
+                text-decoration: underline;
+            }
+        `;
+    },
+
+    showInfo() {
+        document.getElementById('infoModal').classList.add('show');
+    },
+    
+    hideInfo() {
+        document.getElementById('infoModal').classList.remove('show');
     }
 };
 
