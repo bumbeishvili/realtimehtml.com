@@ -9,11 +9,13 @@ function openInNewTab(content) {
 
 // Function to generate Three.js sample code with the current shader
 function generateThreeJsSample(fragmentShader) {
-    // Clean up the shader code
-    const cleanShader = fragmentShader
-        .replace(/#version 300 es\s*\n/, '')  // Remove version directive
+    // Clean up the shader code and remove version directive and uniforms
+    let cleanShader = fragmentShader
+        .replace(/#version 300 es[\s\S]*?out vec4 fragColor;/, '')  // Remove version and uniforms block
+        .replace(/#version.*\n/g, '')  // Remove any remaining version directives
         .replace(/true/g, '')  // Remove 'true' strings added by the editor
-        .replace(/\n\s*\n+/g, '\n\n');  // Clean up multiple empty lines
+        .replace(/\n\s*\n+/g, '\n\n')  // Clean up multiple empty lines
+        .trim();  // Remove leading/trailing whitespace
 
     // Basic vertex shader for WebGL2 (without version directive)
     const vertexShader = `in vec3 position;
@@ -21,8 +23,25 @@ function generateThreeJsSample(fragmentShader) {
             gl_Position = vec4(position, 1.0);
         }`;
 
-    // Log the cleaned shader for debugging
-    console.log('Clean shader:', cleanShader);
+    // Define shaders section
+    const shaderSection = `
+        // Define shaders
+        const vertexShader = \`${vertexShader}\`;
+        const fragmentShader = \`
+precision highp float;
+precision highp int;
+uniform vec3      iResolution;
+uniform float     iTime;
+uniform float     iTimeDelta;
+uniform float     iFrameRate;
+uniform int       iFrame;
+uniform float     iChannelTime[4];
+uniform vec3      iChannelResolution[4];
+uniform vec4      iMouse;
+uniform vec4      iDate;
+out vec4 fragColor;
+
+${cleanShader.replace(/`/g, '\\`')}\`;`;
 
     return `<!-- 
     Want to see how this shader works? 
@@ -40,24 +59,36 @@ function generateThreeJsSample(fragmentShader) {
     </style>
 </head>
 <body>
-    <script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
-        }
-    }
-    </script>
-
     <script type="module">
-        import * as THREE from 'three';
+        import * as THREE from 'https://unpkg.com/three@0.160.0/build/three.module.js';
 
         // Scene setup
         const scene = new THREE.Scene();
         const camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
-        const renderer = new THREE.WebGLRenderer({ antialias: true });
+
+        // Force WebGL2
+        const canvas = document.createElement('canvas');
+        const context = canvas.getContext('webgl2', {
+            antialias: true,
+            powerPreference: "high-performance",
+            depth: false,
+            stencil: false,
+            alpha: false,
+            preserveDrawingBuffer: false,
+            premultipliedAlpha: false,
+            desynchronized: false,
+            failIfMajorPerformanceCaveat: false
+        });
+        if (!context) {
+            throw new Error('WebGL2 not supported');
+        }
+
+        const renderer = new THREE.WebGLRenderer({
+            canvas: canvas,
+            context: context
+        });
         renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.outputColorSpace = THREE.LinearSRGBColorSpace;
         document.body.appendChild(renderer.domElement);
         
         // Resize handler
@@ -66,9 +97,7 @@ function generateThreeJsSample(fragmentShader) {
         }
         window.addEventListener('resize', onWindowResize);
 
-        // Define shaders
-        const vertexShader = \`${vertexShader}\`;
-        const fragmentShader = \`${cleanShader}\`;
+        ${shaderSection}
 
         // Shader material
         const uniforms = {
@@ -92,7 +121,11 @@ function generateThreeJsSample(fragmentShader) {
             vertexShader,
             fragmentShader,
             uniforms,
-            glslVersion: THREE.GLSL3
+            glslVersion: THREE.GLSL3,
+            toneMapped: false,
+            transparent: false,
+            depthTest: false,
+            depthWrite: false
         });
 
         // Create a plane that fills the screen
@@ -174,6 +207,18 @@ function initDownloadButton(editor) {
     if (downloadButton) {
         downloadButton.addEventListener('click', () => handleThreejsDownload(editor));
     }
+}
+
+function generateThreeShader(glslCode) {
+    // Remove any existing main function and "How to port shaders" comment section
+    let cleanCode = glslCode.replace(/\/\/ ----[^]*?void main\(\)[^]*?}/, '');
+    
+    // Add the main function at the end, keeping original color output
+    return cleanCode + `
+
+void main() {
+    mainImage(fragColor, gl_FragCoord.xy);
+}`;
 }
 
 export { initDownloadButton };
