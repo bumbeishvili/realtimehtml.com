@@ -252,8 +252,8 @@
 #shareButton {
     position: fixed;
     bottom: 70px;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
+    transform: translateX(0);
     z-index: 10000;
     width: 36px;
     height: 36px;
@@ -266,17 +266,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: var(--transition-default);
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    will-change: transform;
 }
 
 #shareButton:hover {
     background-color: var(--modal-hover);
     box-shadow: 0 3px 7px rgba(0,0,0,0.3);
-    transform: translateX(-50%) scale(1.05);
 }
 
 #shareButton:active {
-    transform: translateX(-50%) scale(0.95);
+    transform: scale(0.95);
 }
 
 /* Modal styles */
@@ -392,8 +392,8 @@
 #infoButton {
     position: fixed;
     bottom: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    left: 0;
+    transform: translateX(0);
     z-index: 10000;
     width: 36px;
     height: 36px;
@@ -406,17 +406,17 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: var(--transition-default);
+    transition: background-color 0.2s ease, box-shadow 0.2s ease;
+    will-change: transform;
 }
 
 #infoButton:hover {
     background-color: var(--modal-hover);
     box-shadow: 0 3px 7px rgba(0,0,0,0.3);
-    transform: translateX(-50%) scale(1.05);
 }
 
 #infoButton:active {
-    transform: translateX(-50%) scale(0.95);
+    transform: scale(0.95);
 }
 </style>
 
@@ -598,6 +598,26 @@ const debouncedPreviewUpdate = debounce(() => {
 
 // Move window.onload inside module
 window.addEventListener('load', function() {
+    const shareButton = document.getElementById('shareButton');
+    const infoButton = document.getElementById('infoButton');
+    const buttonWidth = 36; // Width of the buttons
+    
+    function updateButtonPositions() {
+        const gutter = document.querySelector('.gutter');
+        if (gutter) {
+            const gutterRect = gutter.getBoundingClientRect();
+            const gutterCenter = gutterRect.left + (gutterRect.width / 2);
+            const buttonOffset = gutterCenter - (buttonWidth / 2) + 5;
+            shareButton.style.transform = `translateX(${buttonOffset}px)`;
+            infoButton.style.transform = `translateX(${buttonOffset}px)`;
+        }
+    }
+    
+    // Initial positioning
+    const initialOffset = (window.innerWidth / 2) - (buttonWidth / 2);
+    shareButton.style.transform = `translateX(${initialOffset}px)`;
+    infoButton.style.transform = `translateX(${initialOffset}px)`;
+    
     Split(['#left-panel', '#right-panel'], {
         sizes: [50, 50],
         minSize: [200, 200],
@@ -610,8 +630,15 @@ window.addEventListener('load', function() {
         gutterStyle: (dimension, gutterSize) => ({
             'flex-basis': `${gutterSize}px`,
         }),
-        onDrag: () => editor.refresh()
+        onDrag: () => {
+            editor.refresh();
+            updateButtonPositions();
+        }
     });
+    
+    // Handle window resize
+    window.addEventListener('resize', updateButtonPositions);
+    
     init();
 });
 </script>
