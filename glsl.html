@@ -116,6 +116,9 @@
     }
     </script>
 
+    <!-- Add JSZip before your glsl-utils.js -->
+    <script type="module" src="./scripts/glsl-utils.js"></script>
+
     <style>
         /* Base styles */
         :root {
@@ -359,7 +362,6 @@
         /* Add download button styles */
         #downloadButton {
             display: flex;
-            display: none;
             position: fixed;
             bottom: 20px;
             right: 20px;
@@ -422,6 +424,7 @@
 
     <script type="module">
         import { storage, STORAGE_KEYS, embed, modal } from './utils.js';
+        import { initDownloadButton } from './scripts/glsl-utils.js';
 
         const defaultShader = `#version 300 es
 precision highp float;
@@ -695,6 +698,9 @@ void main() {
                 errorDisplay.textContent = error.message;
                 errorDisplay.style.display = 'block';
             }
+
+            // Initialize download button after editor is created
+            initDownloadButton(editor);
         }
 
         // Add Gist loading function

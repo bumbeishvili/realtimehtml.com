@@ -409,11 +409,18 @@ const debouncedPreviewUpdate = debounce(() => {
         rightPanel.appendChild(iframe);
     }
     
-    // Process the content to add loop protection
-    const processedContent = newContent.replace(/\b(for|while)\b\s*\(/g, (match, keyword, offset) => {
-        const lineNumber = newContent.substr(0, offset).split('\n').length;
-        return `${match}loopProtect(${lineNumber}),`;
-    });
+    // Check if loop protection is disabled
+    const isLoopProtectionDisabled = newContent.includes('<!-- disable-loop-protection -->') || 
+                                   newContent.includes('// disable-loop-protection');
+    
+    // Process the content to add loop protection only if not disabled
+    const processedContent = isLoopProtectionDisabled ? 
+        newContent : 
+        newContent.replace(/\b(for|while)\b\s*\(((?:[^;()]|\([^)]*\))*);([^;]*);([^)]*)\)/g, 
+            (match, keyword, init, condition, increment) => {
+                const lineNumber = newContent.substr(0, match.index).split('\n').length;
+                return `${keyword}(${init};${condition};loopProtect(${lineNumber}) && (${increment}))`;
+            });
 
     // Create the protected HTML content
     const html = [
@@ -421,44 +428,44 @@ const debouncedPreviewUpdate = debounce(() => {
         '<html>',
         '<head>',
         '    <meta charset="utf-8">',
-        '    <script>',
-        '        // Loop protection',
-        '        window.__loopProtect = true;',
-        '        window.__loopProtectTimeout = 500;',
-        '        let __loopCount = {};',
-        '',
-        '        // Override setTimeout and setInterval',
-        '        const originalSetTimeout = setTimeout;',
-        '        const originalSetInterval = setInterval;',
-        '',
-        '        window.setTimeout = function(fn, delay) {',
-        '            if (delay < 10) delay = 10;',
-        '            return originalSetTimeout.call(this, fn, delay);',
-        '        };',
-        '',
-        '        window.setInterval = function(fn, delay) {',
-        '            if (delay < 10) delay = 10;',
-        '            return originalSetInterval.call(this, fn, delay);',
-        '        };',
-        '',
-        '        function loopProtect(line) {',
-        '            if (!window.__loopProtect) return;',
-        '            const key = "loop" + line;',
-        '            __loopCount[key] = (__loopCount[key] || 0) + 1;',
-        '',
-        '            if (__loopCount[key] > 1000000) {',
-        '                const msg = "Potential infinite loop detected on line " + line;',
-        '                console.error(msg);',
-        '                document.body.innerHTML = \'<div style="color: red; font-family: monospace; padding: 20px;">\' + msg + "</div>";',
-        '                throw new Error(msg);',
-        '            }',
-        '',
-        '            if (__loopCount[key] === 1) {',
-        '                setTimeout(() => { __loopCount[key] = 0; }, window.__loopProtectTimeout);',
-        '            }',
-        '            return true;',
-        '        }',
-        '    <\/script>',
+        isLoopProtectionDisabled ? '' : `<script>
+            // Loop protection
+            window.__loopProtect = true;
+            window.__loopProtectTimeout = 500;
+            let __loopCount = {};
+
+            // Override setTimeout and setInterval
+            const originalSetTimeout = setTimeout;
+            const originalSetInterval = setInterval;
+
+            window.setTimeout = function(fn, delay) {
+                if (delay < 10) delay = 10;
+                return originalSetTimeout.call(this, fn, delay);
+            };
+
+            window.setInterval = function(fn, delay) {
+                if (delay < 10) delay = 10;
+                return originalSetInterval.call(this, fn, delay);
+            };
+
+            function loopProtect(line) {
+                if (!window.__loopProtect) return;
+                const key = "loop" + line;
+                __loopCount[key] = (__loopCount[key] || 0) + 1;
+
+                if (__loopCount[key] > 1000000) {
+                    const msg = "Potential infinite loop detected on line " + line+' <br> <br>If you are sure that this is not an infinite loop, you can disable the loop protection by adding <b>disable-loop-protection</b> as a comment in the code';
+                    console.error(msg);
+                    document.body.innerHTML = '<div style="color: red; font-family: monospace; padding: 20px;">' + msg + "</div>";
+                    throw new Error(msg);
+                }
+
+                if (__loopCount[key] === 1) {
+                    setTimeout(() => { __loopCount[key] = 0; }, window.__loopProtectTimeout);
+                }
+                return true;
+            }
+        <\/script>`,
         '</head>',
         '<body>',
         processedContent,
