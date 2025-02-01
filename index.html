@@ -73,35 +73,7 @@
     window.dataLayer = window.dataLayer || [];
     function gtag(){dataLayer.push(arguments);}
     gtag('js', new Date());
-    
-    // Basic configuration without debug mode
     gtag('config', 'G-7E9MWZLQHL');
-
-    // If you want to debug GA events, use console logging without overriding gtag
-    function logGAEvent(eventName, params) {
-        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
-            console.log('GA Event:', eventName, params);
-        }
-    }
-
-    // Update tracking functions to use the logger
-    function trackShareEvent() {
-        const eventParams = {
-            'event_category': 'engagement',
-            'event_label': 'Custom - Share Button Click - index.html'
-        };
-        gtag('event', 'custom_share_index', eventParams);
-        logGAEvent('custom_share_index', eventParams);
-    }
-
-    function trackInfoEvent() {
-        const eventParams = {
-            'event_category': 'engagement',
-            'event_label': 'Custom - Info Modal Button - index.html'
-        };
-        gtag('event', 'custom_info_index_html', eventParams);
-        logGAEvent('custom_info_index_html', eventParams);
-    }
 </script>
 
 <!-- Add CodeMirror CSS and JavaScript -->
@@ -299,8 +271,6 @@ import { storage, STORAGE_KEYS, embed, modal } from './utils.js';
 
 // Make modal functions globally available
 
-window.copyEmbedCode = copyEmbedCode;
-
 const defaultStuff = `<html>
  <head></head>
 <body>
@@ -382,34 +352,6 @@ async function loadGistContent(url) {
         return null;
     }
 }
-
-// Clipboard functions
-const clipboard = {
-    async copy(text) {
-        if (navigator.clipboard && window.isSecureContext) {
-            return navigator.clipboard.writeText(text);
-        }
-        
-        // Fallback for browsers without clipboard API
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        
-        try {
-            document.execCommand('copy');
-            return Promise.resolve();
-        } catch (err) {
-            console.error('Failed to copy URL:', err);
-            return Promise.reject(err);
-        } finally {
-            document.body.removeChild(textarea);
-        }
-    }
-};
-
 
 // Debounce function
 function debounce(func, wait) {
@@ -551,53 +493,6 @@ window.addEventListener('load', function() {
     // Handle window resize
     window.addEventListener('resize', updateButtonPositions);
 });
-
-// Add copyEmbedCode function
-async function copyEmbedCode() {
-    const success = await embed.copyCode(editor);
-    if (!success) {
-        alert('Failed to copy embed code. Please try again.');
-    }
-}
-</script>
-
-<script>
-// Debug GA Events
-function gtag() {
-    // Log all GA events to console
-    console.log('GA Event:', arguments);
-    // Call the real gtag function
-    dataLayer.push(arguments);
-}
-
-
-// Keep this trackShareEvent function definition
-function trackShareEvent() {
-    try {
-        gtag('event', 'custom_share_index', {
-            'event_category': 'engagement',
-            'event_label': 'Custom - Share Button Click - index.html'
-        });
-    } catch (error) {
-        console.error('Error tracking share event:', error);
-    }
-}
-
-// Update the info button onclick
-<button id="infoButton" onclick="trackInfoEvent(); modal.showInfo();" title="Available Editors">
-// ... button content ...
-</button>
-
-function trackInfoEvent() {
-    try {
-        gtag('event', 'custom_info_index', {
-            'event_category': 'engagement',
-            'event_label': 'Custom - Info Modal Button - index.html'
-        });
-    } catch (error) {
-        console.error('Error tracking info event:', error);
-    }
-}
 </script>
 </head>
 <body style="margin: 0; padding: 0; overflow: hidden;">
