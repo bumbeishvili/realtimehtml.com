@@ -433,8 +433,6 @@ import { storage, STORAGE_KEYS, embed, modal } from './utils.js';
 
 // Remove the redundant modal object and functions
 
-// Make functions globally available
-// window.shareCode = shareCode; // Remove this line since it's no longer needed
 
 const defaultStuff = `# Welcome to the Markdown Editor! ✨
 
@@ -642,16 +640,41 @@ window.addEventListener('load', function() {
     init();
 });
 </script>
+
+<script>
+function trackShareEvent() {
+    try {
+        gtag('event', 'custom_share_markdown', {
+            'event_category': 'engagement',
+            'event_label': 'Custom - Share Button Click - markdown.html'
+        });
+    } catch (error) {
+        console.error('Error tracking share event:', error);
+    }
+}
+
+function trackInfoEvent() {
+    console.log('Info event tracked');
+    try {
+        gtag('event', 'custom_info_markdown', {
+            'event_category': 'engagement',
+            'event_label': 'Custom - Info Modal Button - markdown.html'
+        });
+    } catch (error) {
+        console.error('Error tracking info event:', error);
+    }
+}
+</script>
 </head>
 <body style="margin: 0; padding: 0; overflow: hidden;">
-    <button id="shareButton" onclick="modal.show(); gtag('event', 'click', {'event_category': 'Share', 'event_label': 'Share Icon Button - markdown.html', 'value': 1});" title="Share code">
+    <button id="shareButton" onclick="analytics.trackShare(); modal.show();" title="Share code">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z" fill="currentColor"/>
         </svg>
     </button>
 
     <!-- Add info button -->
-    <button id="infoButton" onclick="modal.showInfo(); gtag('event', 'click', {'event_category': 'Info', 'event_label': 'Info Modal Button', 'value': 1});" title="Available Editors">
+    <button id="infoButton" onclick="analytics.trackInfo(); modal.showInfo();" title="Available Editors">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-6h2v6zm0-8h-2V7h2v2z" fill="currentColor"/>
         </svg>

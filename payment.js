@@ -1,5 +1,5 @@
 // Payment integration script
-import { storage, STORAGE_KEYS } from './utils.js';
+import { storage, STORAGE_KEYS, analytics } from './utils.js';
 
 // Environment Configuration
 const isLive = true; // Set to false for test environment
@@ -29,8 +29,8 @@ const currentConfig = isLive ? stripeConfig.live : stripeConfig.test;
 const stripe = Stripe(currentConfig.publishableKey);
 
 // Configuration
-const VISIT_LIMIT = 100; // Configurable visit limit
-const TRIAL_EXTENSION = 10; // Number of additional trials when clicking "Later"
+const VISIT_LIMIT = 50; // Configurable visit limit
+const TRIAL_EXTENSION = 3; // Number of additional trials when clicking "Later"
 const PAYMENT_STORAGE_KEY = 'visit_count';
 const PAYMENT_STATUS_KEY = 'has_donated';
 
@@ -163,26 +163,19 @@ function createModal() {
     const laterBtn = modal.querySelector('.later-button');
     const paymentBtn = modal.querySelector('.payment-button');
     
+    // Get current page name
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const pageType = currentPage.split('.')[0]; // Gets 'index', 'svelte', etc.
+    
     closeBtn.addEventListener('click', () => hideModal());
     laterBtn.addEventListener('click', () => {
-        // Track "Later" button click
-        gtag('event', 'click', {
-            'event_category': 'Donation',
-            'event_label': 'Later Button',
-            'value': 1
-        });
-        // Reset visit count to give more trials
+        analytics.trackDonationLater();
         storage.saveVisitCount(VISIT_LIMIT - TRIAL_EXTENSION);
         hideModal();
     });
     
     paymentBtn.addEventListener('click', () => {
-        // Track donation button click
-        gtag('event', 'click', {
-            'event_category': 'Donation',
-            'event_label': 'Donate Button',
-            'value': 1
-        });
+        analytics.trackDonationStart();
         handlePayment();
     });
     

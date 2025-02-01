@@ -320,8 +320,9 @@ const modal = {
         styleSheet.textContent = this.getModalStyles() + this.getInfoModalStyles();
         document.head.appendChild(styleSheet);
         
-        // Make modal methods globally available
+        // Make modal methods and analytics globally available
         window.modal = this;
+        window.analytics = analytics;
     },
 
     show() {
@@ -334,42 +335,33 @@ const modal = {
     },
 
     async shareCode(pageName = 'index.html') {
+        analytics.trackQuickShare(pageName);
         const content = this.editor.getValue();
         try {
-            if (typeof gtag === 'function') {
-                gtag('event', 'click', {
-                    'event_category': 'Share',
-                    'event_label': `Quick Share Button - ${pageName}`,
-                    'value': 1
-                });
-            }
-            
             // Get the current page URL without hash
             const baseUrl = window.location.href.split('#')[0];
             const encoded = btoa(unescape(encodeURIComponent(content)));
             const shareUrl = `${baseUrl}#code=${encoded}`;
             
-            await clipboard.copy(shareUrl);
+            const copySuccess = await clipboard.copy(shareUrl);
             const button = document.getElementById('compressedButton');
-            button.textContent = 'Copied!';
             
-            setTimeout(() => {
-                button.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/></svg>Copy compressed URL';
-            }, 2000);
+            if (copySuccess) {
+                button.textContent = 'Copied!';
+                setTimeout(() => {
+                    button.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 1H4c-1.1 0-2 .9-2 2v14h2V3h12V1zm3 4H8c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h11c1.1 0 2-.9 2-2V7c0-1.1-.9-2-2-2zm0 16H8V7h11v14z" fill="currentColor"/></svg>Copy compressed URL';
+                }, 2000);
+            } else {
+                throw new Error('Copy failed');
+            }
         } catch (error) {
             console.error('Error sharing code:', error);
-            alert('Could not automatically copy the URL');
+            alert('Could not automatically copy the URL. Here it is to copy manually:\n\n' + shareUrl);
         }
     },
 
     async copyEmbedCode() {
-        if (typeof gtag === 'function') {
-            gtag('event', 'click', {
-                'event_category': 'Share',
-                'event_label': 'Embed Code Button',
-                'value': 1
-            });
-        }
+        analytics.trackEmbedCopy();
         const success = await embed.copyCode(this.editor);
         if (!success) {
             alert('Failed to copy embed code. Please try again.');
@@ -523,30 +515,111 @@ const modal = {
     }
 };
 
-// Add clipboard utility
+// Update the clipboard utility
 const clipboard = {
     async copy(text) {
-        if (navigator.clipboard && window.isSecureContext) {
-            return navigator.clipboard.writeText(text);
-        }
-        
-        const textarea = document.createElement('textarea');
-        textarea.value = text;
-        textarea.style.position = 'fixed';
-        textarea.style.opacity = '0';
-        document.body.appendChild(textarea);
-        textarea.select();
-        
         try {
-            document.execCommand('copy');
-            return Promise.resolve();
-        } catch (err) {
-            console.error('Failed to copy:', err);
-            return Promise.reject(err);
-        } finally {
-            document.body.removeChild(textarea);
+            // Try the modern clipboard API first
+            if (navigator.clipboard && window.isSecureContext) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                } catch (clipboardError) {
+                    console.warn('Clipboard API failed:', clipboardError);
+                    // Fall back to execCommand method
+                }
+            }
+            
+            // Fallback for non-secure contexts or if clipboard API fails
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.left = '-999999px';
+            textarea.style.top = '-999999px';
+            document.body.appendChild(textarea);
+            textarea.focus();
+            textarea.select();
+            
+            try {
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                return true;
+            } catch (execCommandError) {
+                console.error('execCommand failed:', execCommandError);
+                document.body.removeChild(textarea);
+                return false;
+            }
+        } catch (error) {
+            console.error('Copy failed:', error);
+            return false;
         }
     }
 };
 
-export { STORAGE_KEYS, storage, embed, modal };
+// Create the analytics object without exporting it directly
+const analytics = {
+    // Debug logger for development
+    logEvent(eventName, params) {
+        if (location.hostname === 'localhost' || location.hostname === '127.0.0.1') {
+            console.log('GA Event:', eventName, params);
+        }
+    },
+
+    // Generic tracking function that handles all events
+    track(eventName, pageType) {
+        try {
+            const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+            const eventParams = {
+                'event_category': 'engagement',
+                'event_label': `Custom - ${eventName} - ${currentPage}`
+            };
+            
+            // Construct event name with page type
+            const fullEventName = `custom_${eventName}_${pageType}`;
+            
+            // Send to GA
+            if (typeof gtag === 'function') {
+                gtag('event', fullEventName, eventParams);
+                this.logEvent(fullEventName, eventParams);
+            } else {
+                console.warn('Google Analytics not loaded');
+            }
+        } catch (error) {
+            console.error('Error tracking event:', error);
+        }
+    },
+
+    // Specific event tracking functions
+    trackShare() {
+        const pageType = window.location.pathname.split('.')[0].split('/').pop() || 'index';
+        this.track('share', pageType);
+    },
+
+    trackInfo() {
+        const pageType = window.location.pathname.split('.')[0].split('/').pop() || 'index';
+        this.track('info', pageType);
+    },
+
+    trackQuickShare(pageName) {
+        const pageType = pageName.split('.')[0] || 'index';
+        this.track('quick_share', pageType);
+    },
+
+    trackEmbedCopy() {
+        const pageType = window.location.pathname.split('.')[0].split('/').pop() || 'index';
+        this.track('embed_copy', pageType);
+    },
+
+    trackDonationStart() {
+        const pageType = window.location.pathname.split('.')[0].split('/').pop() || 'index';
+        this.track('donation_start', pageType);
+    },
+
+    trackDonationLater() {
+        const pageType = window.location.pathname.split('.')[0].split('/').pop() || 'index';
+        this.track('donation_later', pageType);
+    }
+};
+
+// Single export statement at the bottom
+export { STORAGE_KEYS, storage, embed, modal, analytics };
