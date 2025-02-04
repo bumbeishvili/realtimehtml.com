@@ -734,6 +734,15 @@ window.addEventListener('load', function() {
     init();
 });
 </script>
+<!-- Global site tag (gtag.js) - Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-7E9MWZLQHL"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', 'G-7E9MWZLQHL');
+</script>
+
 </head>
 <body style="margin: 0; padding: 0; overflow: hidden;">
     <button id="shareButton" onclick="analytics.trackShare(); modal.show();" title="Share code">
