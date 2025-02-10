@@ -151,7 +151,7 @@ function createModal() {
             <p style="font-size: 14px; color: #999;">Once you make a donation, we'll remember your support and won't show this popup again in this browser.</p>
             <div class="payment-error"></div>
             <div>
-                <button class="payment-button">Make a Donation</button>
+                <button class="payment-button"> Get rid of this annoying popup (2.99$)</button>
                 <button class="later-button">Later</button>
             </div>
         </div>
