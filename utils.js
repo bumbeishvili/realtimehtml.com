@@ -11,12 +11,17 @@ const STORAGE_KEYS = {
 
 // Embed code utility functions
 const embed = {
+    generateUrl(content, type = 'embed') {
+        const encoded = btoa(unescape(encodeURIComponent(content)));
+        const currentPath = window.location.pathname;
+        const hideEditor = document.getElementById('hideEditorCheckbox')?.checked;
+        return `${window.location.origin}${currentPath}${hideEditor ? '?edit=0' : ''}#code=${encoded}`;
+    },
+
     async copyCode(editor, type = 'editor') {
         try {
             const content = editor.getValue();
-            const encoded = btoa(unescape(encodeURIComponent(content)));
-            const currentPath = window.location.pathname;
-            const embedUrl = `${window.location.origin}${currentPath}#code=${encoded}`;
+            const embedUrl = this.generateUrl(content);
             const embedCode = `<iframe src="${embedUrl}" style="width: 100%; height: 600px; border: none; border-radius: 4px; overflow: hidden;"></iframe>`;
             
             if (navigator.clipboard && window.isSecureContext) {
@@ -48,9 +53,7 @@ const embed = {
 
     getCode(editor) {
         const content = editor.getValue();
-        const encoded = btoa(unescape(encodeURIComponent(content)));
-        const currentPath = window.location.pathname;
-        const embedUrl = `${window.location.origin}${currentPath}#code=${encoded}`;
+        const embedUrl = this.generateUrl(content);
         return `<iframe src="${embedUrl}" style="width: 100%; height: 600px; border: none; border-radius: 4px; overflow: hidden;"></iframe>`;
     }
 };
@@ -142,9 +145,16 @@ const modal = {
                 </button>
                 <h2 style="margin-top: 0;">Share Your Code</h2>
                 
+                <div class="share-settings">
+                    <label class="checkbox-label">
+                        <input type="checkbox" id="hideEditorCheckbox" onchange="modal.updateGistExample()">
+                        <span>Hide code editor when shared</span>
+                    </label>
+                </div>
+                
                 <div class="share-option">
                     <h3>Option 1: Share via GitHub Gist (Recommended)</h3>
-                    <p>Create a new Gist at <a href="https://gist.github.com" target="_blank" style="color: #7cb7ff;">gist.github.com</a>, paste your code, click "Raw" after saving, then add the raw URL to: <code style="background: #404040; padding: 2px 6px; border-radius: 4px;">${baseUrl}#https://gist.githubusercontent.com/user/id/raw/...</code></p>
+                    <p>Create a new Gist at <a href="https://gist.github.com" target="_blank" style="color: #7cb7ff;">gist.github.com</a>, paste your code, click "Raw" after saving, then add the raw URL to: <code id="gistExample" style="background: #404040; padding: 2px 6px; border-radius: 4px;">${baseUrl}#https://gist.githubusercontent.com/user/id/raw/...</code></p>
                 </div>
 
                 <div class="share-option">
@@ -303,11 +313,36 @@ const modal = {
                 scrollbar-color: #666 #404040;
                 padding-right: 10px;
             }
+
+            .share-settings {
+                margin-bottom: 15px;
+            }
+            
+            .checkbox-label {
+                display: flex;
+                align-items: center;
+                gap: 8px;
+                color: #fff;
+                font-size: 14px;
+                cursor: pointer;
+            }
+            
+            .checkbox-label input[type="checkbox"] {
+                width: 16px;
+                height: 16px;
+                cursor: pointer;
+            }
         `;
     },
 
     init(editor) {
         this.editor = editor;
+        
+        // Check if we're in view-only mode
+        if (utils.isViewOnlyMode()) {
+            utils.setupViewOnlyMode(editor);
+            return; // Don't initialize share modal in view-only mode
+        }
         
         // Add both modals HTML to body
         const modalDiv = document.createElement('div');
@@ -319,6 +354,15 @@ const modal = {
         const styleSheet = document.createElement('style');
         styleSheet.textContent = this.getModalStyles() + this.getInfoModalStyles();
         document.head.appendChild(styleSheet);
+        
+        // Add checkbox event listener
+        const checkbox = document.getElementById('hideEditorCheckbox');
+        if (checkbox) {
+            checkbox.addEventListener('change', () => {
+                document.getElementById('embedCode').textContent = embed.getCode(this.editor);
+                this.updateGistExample();
+            });
+        }
         
         // Make modal methods and analytics globally available
         window.modal = this;
@@ -338,10 +382,8 @@ const modal = {
         analytics.trackQuickShare(pageName);
         const content = this.editor.getValue();
         try {
-            // Get the current page URL without hash
-            const baseUrl = window.location.href.split('#')[0];
-            const encoded = btoa(unescape(encodeURIComponent(content)));
-            const shareUrl = `${baseUrl}#code=${encoded}`;
+            // Get the URL using the same generator function
+            const shareUrl = embed.generateUrl(content, 'share');
             
             const copySuccess = await clipboard.copy(shareUrl);
             const button = document.getElementById('compressedButton');
@@ -512,6 +554,14 @@ const modal = {
     
     hideInfo() {
         document.getElementById('infoModal').classList.remove('show');
+    },
+
+    updateGistExample() {
+        const currentPath = window.location.pathname;
+        const baseUrl = `${window.location.origin}${currentPath}`;
+        const hideEditor = document.getElementById('hideEditorCheckbox')?.checked;
+        const exampleUrl = `${baseUrl}${hideEditor ? '?edit=0' : ''}#https://gist.githubusercontent.com/user/id/raw/...`;
+        document.getElementById('gistExample').textContent = exampleUrl;
     }
 };
 
@@ -621,5 +671,67 @@ const analytics = {
     }
 };
 
+// Add this at the top level of the file, after STORAGE_KEYS
+const utils = {
+    isViewOnlyMode() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('edit') === '0';
+    },
+
+    setupViewOnlyMode(editor) {
+        // Hide share and info buttons
+        const shareButton = document.getElementById('shareButton');
+        const infoButton = document.getElementById('infoButton');
+        const downloadButton = document.getElementById('downloadButton');
+      
+        if (shareButton) shareButton.style.display = 'none';
+        if (infoButton) infoButton.style.display = 'none';
+        if (downloadButton) downloadButton.style.display = 'none';
+
+        // Make editor read-only
+        if (editor) {
+            editor.setOption('readOnly', true);
+            
+            // Add CSS to hide the cursor and selection
+            const styleSheet = document.createElement('style');
+            styleSheet.textContent = `
+                .CodeMirror-cursor {
+                    display: none !important;
+                }
+                .CodeMirror-selected {
+                    background: transparent !important;
+                }
+                .CodeMirror pre {
+                    pointer-events: none;
+                }
+            `;
+            document.head.appendChild(styleSheet);
+        }
+
+        // Hide the left panel gutter/resize handle
+        const gutter = document.querySelector('.gutter');
+        const gutterHorizontal = document.querySelector('.gutter-horizontal');
+        if (gutter) gutter.style.display = 'none';
+        if (gutterHorizontal) gutterHorizontal.style.display = 'none';
+
+        // Adjust the editor panel to be minimal
+        const leftPanel = document.getElementById('left-panel');
+        if (leftPanel) {
+            leftPanel.style.maxWidth = '0';
+            leftPanel.style.minWidth = '0';
+            leftPanel.style.width = '0';
+            leftPanel.style.padding = '0';
+            leftPanel.style.overflow = 'hidden';
+        }
+
+        // Make the preview panel take full width
+        const rightPanel = document.getElementById('right-panel');
+        if (rightPanel) {
+            rightPanel.style.width = '100%';
+            rightPanel.style.flexBasis = '100%';
+        }
+    }
+};
+
 // Single export statement at the bottom
-export { STORAGE_KEYS, storage, embed, modal, analytics };
+export { STORAGE_KEYS, storage, embed, modal, analytics, utils };
