@@ -468,6 +468,11 @@ const modal = {
                 </div>
                 <div class="support-info">
                     <p>For payment-related issues or refund requests, please contact <a href="mailto:me@davidb.dev">me@davidb.dev</a></p>
+                    <div class="legal-links">
+                        <a href="/privacy.html">Privacy Policy</a>
+                        <span>•</span>
+                        <a href="/terms.html">Terms of Service</a>
+                    </div>
                 </div>
             </div>
         </div>`;
@@ -544,6 +549,28 @@ const modal = {
             .support-info a:hover {
                 color: #9ccaff;
                 text-decoration: underline;
+            }
+
+            .legal-links {
+                margin-top: 10px;
+                font-size: 12px;
+            }
+
+            .legal-links a {
+                color: #999;
+                text-decoration: none;
+                margin: 0 8px;
+                transition: color 0.2s ease;
+            }
+
+            .legal-links a:hover {
+                color: #ccc;
+                text-decoration: underline;
+            }
+
+            .legal-links span {
+                color: #666;
+                margin: 0 4px;
             }
         `;
     },
