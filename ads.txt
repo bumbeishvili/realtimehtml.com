@@ -1,0 +1,11 @@
+ezoic.com, 19390, DIRECT
+google.com, pub-9539598081480874, RESELLER, f08c47fec0942fa0
+appnexus.com, 3153, RESELLER, f5ab79cb980f11d1
+rubiconproject.com, 17960, RESELLER, 0bfd66d529a55807
+openx.com, 537153564, RESELLER, 6a698e2ec38604c6
+pubmatic.com, 156423, RESELLER, 5d62403b186f2ace
+indexexchange.com, 186046, RESELLER
+sovrn.com, 257611, RESELLER, fafdf38b16bf6b2b
+advertising.com, 28246, RESELLER
+contextweb.com, 561998, RESELLER, 89ff185a4c4e857c
+rhythmone.com, 188404962, RESELLER, a670c89d4a324e47
