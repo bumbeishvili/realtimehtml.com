@@ -4,17 +4,47 @@ import { storage, STORAGE_KEYS, modal } from '../utils.js';
 // Make modal functions globally available
 
 const defaultStuff = `<html>
- <head></head>
+ <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        #message {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+        }
+        .ad-placeholder {
+            margin: 20px 0;
+            padding: 40px;
+            background: #fff;
+            border: 2px dashed #ddd;
+            border-radius: 8px;
+            text-align: center;
+            color: #999;
+        }
+    </style>
+</head>
 <body>
 
     <div id="message"></div>
 
+    <!-- Ad Placeholder -->
+    <div class="ad-placeholder">
+        📢 Ad space - visible in production
+    </div>
+
     <script\> 
-       document.getElementById('message').innerHTML = 'Edit code left, see the result right';
+       document.getElementById('message').innerHTML = '<strong>Edit code left, see the result right</strong><br><br>This is a real-time HTML editor. Try changing the code!';
     <\/script>
 
 </body>
-<html>`;
+</html>`;
 
 let editor;
 let previousContent = '';

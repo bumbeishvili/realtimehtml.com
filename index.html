@@ -102,11 +102,89 @@
 <script src="https://cmp.gatekeeperconsent.com/min.js" data-cfasync="false"></script>
 <script src="https://the.gatekeeperconsent.com/cmp.min.js" data-cfasync="false"></script>
 
-<!-- Ezoic Standalone Script -->
-<script async src="//www.ezojs.com/ezoic/sa.min.js"></script>
+<!-- Ezoic Standalone Script - Dynamic loading based on content -->
 <script>
-    window.ezstandalone = window.ezstandalone || {};
-    ezstandalone.cmd = ezstandalone.cmd || [];
+    // Function to check if iframe content has ad placeholders
+    function checkForAdPlaceholders() {
+        try {
+            const iframe = document.getElementById('preview');
+            if (!iframe || !iframe.contentDocument) return false;
+            
+            const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+            const hasAdPlaceholder = iframeDoc.querySelector('.ad-placeholder') !== null;
+            
+            return hasAdPlaceholder;
+        } catch (e) {
+            // Cross-origin or access error
+            return false;
+        }
+    }
+    
+    // Function to initialize Ezoic
+    function initializeEzoic() {
+        if (window.ezoicInitialized) return;
+        
+        window.ezstandalone = window.ezstandalone || {};
+        window.ezstandalone.cmd = window.ezstandalone.cmd || [];
+        
+        // Load Ezoic script
+        var script = document.createElement('script');
+        script.src = '//www.ezojs.com/ezoic/sa.min.js';
+        script.async = true;
+        script.onerror = function() {
+            console.log('Ezoic script blocked or failed to load');
+        };
+        document.head.appendChild(script);
+        
+        window.ezoicInitialized = true;
+        console.log('✅ Ezoic initialized - ad placeholders detected');
+    }
+    
+    // Check if we should load Ezoic
+    const isProduction = window.location.hostname === 'realtimehtml.com' || 
+                        window.location.hostname === 'www.realtimehtml.com';
+    const isLocalTest = window.location.hostname === '127.0.0.1' || 
+                       window.location.hostname === 'localhost';
+    
+    // Set to true to test Ezoic on localhost
+    const enableLocalTesting = true;
+    
+    if (isProduction || (isLocalTest && enableLocalTesting)) {
+        // Watch for iframe changes and check for ad placeholders
+        const observer = new MutationObserver(() => {
+            if (checkForAdPlaceholders()) {
+                initializeEzoic();
+                observer.disconnect(); // Stop observing once initialized
+            }
+        });
+        
+        // Start observing the right panel for iframe changes
+        const rightPanel = document.getElementById('right-panel');
+        if (rightPanel) {
+            observer.observe(rightPanel, { 
+                childList: true, 
+                subtree: true,
+                attributes: true
+            });
+        }
+        
+        // Also check periodically in case mutation observer misses it
+        let checkCount = 0;
+        const checkInterval = setInterval(() => {
+            if (checkForAdPlaceholders()) {
+                initializeEzoic();
+                clearInterval(checkInterval);
+            }
+            checkCount++;
+            if (checkCount > 10) clearInterval(checkInterval); // Stop after 10 attempts
+        }, 1000);
+        
+        if (isLocalTest) {
+            console.log('⚠️ Ezoic will load only if .ad-placeholder is found in content');
+        }
+    } else {
+        console.log('Ezoic disabled on localhost/development');
+    }
 </script>
 
 <style>
