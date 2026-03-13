@@ -466,6 +466,22 @@ const modal = {
                         <p>Tailwind CSS playground with class suggestions</p>
                     </a>
                 </div>
+                <div class="support-cta" style="margin-top: 20px; text-align: center;">
+                    <button onclick="modal.hideInfo(); if(window.showPaymentModal) window.showPaymentModal();" style="
+                        display: inline-block;
+                        background: #4CAF50;
+                        color: white;
+                        padding: 12px 24px;
+                        border: none;
+                        border-radius: 6px;
+                        font-size: 16px;
+                        font-weight: 500;
+                        cursor: pointer;
+                        transition: all 0.2s ease;
+                    " onmouseover="this.style.background='#45a049';this.style.transform='translateY(-1px)'" onmouseout="this.style.background='#4CAF50';this.style.transform='none'">
+                        Support Us &amp; Remove Ads (2.99$)
+                    </button>
+                </div>
                 <div class="support-info">
                     <p>For payment-related issues or refund requests, please contact <a href="mailto:me@davidb.dev">me@davidb.dev</a></p>
                     <div class="legal-links">

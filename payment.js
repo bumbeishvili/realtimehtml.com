@@ -146,7 +146,7 @@ function createModal() {
     modal.innerHTML = `
         <div class="payment-modal-content">
             <button class="payment-modal-close">&times;</button>
-            <h2>Support Our Platform 🙏</h2>
+            <h2>Support Our Platform and get rid of ads!</h2>
             <p>Thank you for being an active user! To help keep this tool free and maintain our servers, would you consider making a small donation?</p>
             <p style="font-size: 14px; color: #999;">Once you make a donation, we'll remember your support and won't show this popup again in this browser.</p>
             <div class="payment-error"></div>
@@ -287,6 +287,12 @@ function onLimitReached() {
     injectStyles();
     showModal();
 }
+
+// Expose payment trigger globally for use from info modal
+window.showPaymentModal = function() {
+    analytics.trackDonationStart();
+    handlePayment();
+};
 
 // Run initial checks
 document.addEventListener('DOMContentLoaded', () => {

@@ -11,13 +11,14 @@ const defaultStuff = `<html>
         body {
             font-family: Arial, sans-serif;
             padding: 20px;
-            background: #f5f5f5;
+            background: white;
         }
         #message {
-            background: white;
+            background: #f5f5f5;
             padding: 20px;
             border-radius: 8px;
             text-align: center;
+             margin-top:20px;
         }
         .ad-placeholder {
             margin: 20px 0;
@@ -32,16 +33,22 @@ const defaultStuff = `<html>
 </head>
 <body>
 
+    <div style="width:100%;display:flex;justify-content:center;align-items:center;paddint-top:20px;margin-top:20px">
+     <script async type="text/javascript" src="//cdn.carbonads.com/carbon.js?serve=CWBDPK3J&placement=realtimehtmlcom&format=cover" id="_carbonads_js"><\/script>
+  </div>
+  
     <div id="message"></div>
 
-    <!-- Ad Placeholder -->
-    <div class="ad-placeholder">
-        📢 Ad space - visible in production
-    </div>
 
+   
+   
     <script\> 
        document.getElementById('message').innerHTML = '<strong>Edit code left, see the result right</strong><br><br>This is a real-time HTML editor. Try changing the code!';
     <\/script>
+  
+
+ 
+</div>
 
 </body>
 </html>`;
@@ -92,12 +99,14 @@ async function init() {
         // Save to localStorage
         const content = cm.getValue();
         storage.save(STORAGE_KEYS.REALTIME_HTML, content, defaultStuff);
+        updateCarbonOverlay(content);
     });
     
     editor.focus();
     editor.execCommand('selectAll');
     
     debouncedPreviewUpdate();
+    updateCarbonOverlay(editor.getValue());
 
     // Inside init() or after editor is created, add:
     modal.init(editor);
@@ -210,6 +219,26 @@ const debouncedPreviewUpdate = debounce(() => {
     
     iframe.srcdoc = html;
 }, 150);
+
+// Carbon ads overlay: show when editor content doesn't already include carbon ads
+let carbonLoaded = false;
+function updateCarbonOverlay(content) {
+    const overlay = document.getElementById('carbon-overlay');
+    if (!overlay) return;
+    const hasPaid = storage.getPaymentStatus();
+    const contentHasCarbonAds = content.includes('carbonads.com/carbon.js');
+    const shouldShow = !hasPaid && !contentHasCarbonAds;
+    overlay.style.display = shouldShow ? 'flex' : 'none';
+    if (shouldShow && !carbonLoaded) {
+        carbonLoaded = true;
+        const script = document.createElement('script');
+        script.async = true;
+        script.type = 'text/javascript';
+        script.src = '//cdn.carbonads.com/carbon.js?serve=CWBDPK3J&placement=realtimehtmlcom&format=cover';
+        script.id = '_carbonads_js';
+        overlay.appendChild(script);
+    }
+}
 
 // Update the Split initialization
 window.addEventListener('load', function() {
