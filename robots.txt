@@ -1,0 +1,6 @@
+User-agent: *
+Allow: /
+Disallow: /init/
+Disallow: /scripts/
+
+Sitemap: https://realtimehtml.com/sitemap.xml
