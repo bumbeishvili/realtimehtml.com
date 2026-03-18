@@ -773,6 +773,10 @@ const utils = {
             rightPanel.style.width = '100%';
             rightPanel.style.flexBasis = '100%';
         }
+
+        // Hide carbon ads overlay
+        const carbonOverlay = document.getElementById('carbon-overlay');
+        if (carbonOverlay) carbonOverlay.style.display = 'none';
     }
 };
 
