@@ -1,5 +1,5 @@
 
-import { storage, STORAGE_KEYS, modal } from '../utils.js';
+import { storage, STORAGE_KEYS, modal, utils } from '../utils.js';
 
 // Make modal functions globally available
 
@@ -226,8 +226,9 @@ function updateCarbonOverlay(content) {
     const overlay = document.getElementById('carbon-overlay');
     if (!overlay) return;
     const hasPaid = storage.getPaymentStatus();
+    const isViewOnly = utils.isViewOnlyMode();
     const contentHasCarbonAds = content.includes('carbonads.com/carbon.js');
-    const shouldShow = !hasPaid && !contentHasCarbonAds;
+    const shouldShow = !hasPaid && !contentHasCarbonAds && !isViewOnly;
     overlay.style.display = shouldShow ? 'flex' : 'none';
     if (shouldShow && !carbonLoaded) {
         carbonLoaded = true;
