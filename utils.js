@@ -711,6 +711,11 @@ const analytics = {
     trackDonationLater() {
         const pageType = window.location.pathname.split('.')[0].split('/').pop() || 'index';
         this.track('donation_later', pageType);
+    },
+
+    trackViewOnly() {
+        const pageType = window.location.pathname.split('.')[0].split('/').pop() || 'index';
+        this.track('view_only', pageType);
     }
 };
 
@@ -722,6 +727,9 @@ const utils = {
     },
 
     setupViewOnlyMode(editor) {
+        // Track view-only mode in analytics
+        analytics.trackViewOnly();
+
         // Hide share and info buttons
         const shareButton = document.getElementById('shareButton');
         const infoButton = document.getElementById('infoButton');
